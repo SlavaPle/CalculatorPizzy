@@ -1,0 +1,243 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String?
+  name        String
+  avatar      String?
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastLoginAt DateTime?
+
+  // OAuth
+  oauthProviders OAuthProvider[]
+
+  // Sessions
+  sessions UserSession[]
+
+  // User preferences
+  preferences UserPreferences?
+
+  // User's calculators
+  calculators Calculator[]
+
+  // User's formulas
+  formulas Formula[]
+
+  // User's calculations
+  calculations Calculation[]
+
+  @@map("users")
+}
+
+model OAuthProvider {
+  id         String @id @default(uuid())
+  userId     String
+  provider   String // google, facebook, apple
+  providerId String
+  email      String
+  name       String
+  avatar     String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@map("oauth_providers")
+}
+
+model UserSession {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  deviceInfo Json?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+model UserPreferences {
+  id       String @id @default(uuid())
+  userId   String @unique
+  language String @default("ru")
+  theme    String @default("light") // light, dark, auto
+  units    String @default("metric") // metric, imperial, custom
+  notifications Json? // { email: boolean, push: boolean, sync: boolean }
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model Calculator {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  displayName String
+  description String?
+  isActive    Boolean  @default(true)
+  isTemplate  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Calculator inputs
+  inputs Input[]
+
+  // Calculator formulas
+  formulas Formula[]
+
+  // Calculator outputs
+  outputs Output[]
+
+  // Calculator calculations
+  calculations Calculation[]
+
+  @@map("calculators")
+}
+
+model Input {
+  id          String   @id @default(uuid())
+  calculatorId String
+  name        String
+  displayName String
+  type        String   @default("number") // number, text, boolean
+  unit        String   @default("")
+  isRequired  Boolean  @default(true)
+  minValue    Float?
+  maxValue    Float?
+  step        Float    @default(1.0)
+  pattern     String?
+  maxLength   Int?
+  defaultValue String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  calculator Calculator @relation(fields: [calculatorId], references: [id], onDelete: Cascade)
+
+  @@map("inputs")
+}
+
+model Formula {
+  id              String   @id @default(uuid())
+  calculatorId    String
+  userId          String
+  name            String
+  displayName     String
+  formula         String
+  inputs          String[] // Array of input variable names
+  outputs         String[] // Array of output variable names
+  executionOrder  Int      @default(0)
+  isEnabled       Boolean  @default(true)
+  isCollapsed     Boolean  @default(false)
+  dependencies    String[] // Array of dependent formula IDs
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  calculator Calculator @relation(fields: [calculatorId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Formula calculations
+  calculations Calculation[]
+
+  @@map("formulas")
+}
+
+model Output {
+  id          String   @id @default(uuid())
+  calculatorId String
+  name        String
+  displayName String
+  type        String   @default("number") // number, text, boolean
+  unit        String   @default("")
+  isCalculated Boolean @default(false)
+  decimals    Int      @default(2)
+  showUnit    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  calculator Calculator @relation(fields: [calculatorId], references: [id], onDelete: Cascade)
+
+  @@map("outputs")
+}
+
+model Calculation {
+  id          String   @id @default(uuid())
+  calculatorId String
+  formulaId    String?
+  userId       String
+  inputValues  Json     // Map of input variable names to values
+  outputValues Json     // Map of output variable names to values
+  executionTime Int     @default(0) // in milliseconds
+  success     Boolean  @default(true)
+  error       String?
+  createdAt   DateTime @default(now())
+
+  calculator Calculator @relation(fields: [calculatorId], references: [id], onDelete: Cascade)
+  formula Formula? @relation(fields: [formulaId], references: [id], onDelete: SetNull)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("calculations")
+}
+
+model FormulaTemplate {
+  id          String   @id @default(uuid())
+  name        String
+  displayName String
+  description String
+  category    String   @default("custom") // mathematical, financial, physical, etc.
+  formula     String
+  inputs      Json     // Array of template input definitions
+  outputs     Json     // Array of template output definitions
+  isPublic    Boolean  @default(false)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("formula_templates")
+}
+
+model Unit {
+  id          String   @id @default(uuid())
+  symbol      String   @unique
+  name        String
+  category    String   // length, mass, time, temperature, etc.
+  isBase      Boolean  @default(false)
+  conversionFactor Float @default(1.0)
+  baseUnit    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("units")
+}
+
+model UnitConversion {
+  id        String @id @default(uuid())
+  fromUnit  String
+  toUnit    String
+  factor    Float
+  offset    Float  @default(0.0)
+  createdAt DateTime @default(now())
+
+  fromUnitRelation Unit @relation("FromUnit", fields: [fromUnit], references: [symbol])
+  toUnitRelation Unit @relation("ToUnit", fields: [toUnit], references: [symbol])
+
+  @@unique([fromUnit, toUnit])
+  @@map("unit_conversions")
+}

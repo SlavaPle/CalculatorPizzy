@@ -1,0 +1,65 @@
+{
+  "name": "kalkulator-shared",
+  "version": "1.0.0",
+  "description": "Общие компоненты и типы для Kalkulator",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rimraf dist",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix"
+  },
+  "dependencies": {
+    "mathjs": "^11.5.0",
+    "uuid": "^9.0.0",
+    "date-fns": "^2.29.3",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.191",
+    "@types/uuid": "^9.0.1",
+    "typescript": "^5.0.2",
+    "rimraf": "^5.0.1",
+    "eslint": "^8.35.0",
+    "@typescript-eslint/eslint-plugin": "^5.54.1",
+    "@typescript-eslint/parser": "^5.54.1"
+  },
+  "files": [
+    "dist/**/*",
+    "src/**/*"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./models": {
+      "types": "./dist/models/index.d.ts",
+      "import": "./dist/models/index.js"
+    },
+    "./formula-engine": {
+      "types": "./dist/formula-engine/index.d.ts",
+      "import": "./dist/formula-engine/index.js"
+    },
+    "./units-converter": {
+      "types": "./dist/units-converter/index.d.ts",
+      "import": "./dist/units-converter/index.js"
+    },
+    "./ui-components": {
+      "types": "./dist/ui-components/index.d.ts",
+      "import": "./dist/ui-components/index.js"
+    },
+    "./auth": {
+      "types": "./dist/auth/index.d.ts",
+      "import": "./dist/auth/index.js"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "import": "./dist/utils/index.js"
+    }
+  }
+}
