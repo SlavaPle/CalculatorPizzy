@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { X, Trash2, Save } from 'lucide-react'
+import NumericStepper from './NumericStepper'
 
 export interface PizzaSettings {
   smallPizzaSlices: number
@@ -60,47 +61,30 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
           <div>
             <h3 className="font-medium text-gray-900 mb-3">Настройки расчета</h3>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Кусков в маленькой пицце
-                </label>
-                <input
-                  type="number"
-                  value={localSettings.smallPizzaSlices}
-                  onChange={(e) => setLocalSettings({...localSettings, smallPizzaSlices: parseInt(e.target.value) || 6})}
-                  min={4}
-                  max={10}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pizza-500"
-                />
-              </div>
+              <NumericStepper
+                label="Кусков в маленькой пицце"
+                value={localSettings.smallPizzaSlices}
+                onChange={(value) => setLocalSettings({...localSettings, smallPizzaSlices: value})}
+                min={4}
+                max={10}
+              />
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Кусков в большой пицце
-                </label>
-                <input
-                  type="number"
-                  value={localSettings.largePizzaSlices}
-                  onChange={(e) => setLocalSettings({...localSettings, largePizzaSlices: parseInt(e.target.value) || 8})}
-                  min={6}
-                  max={12}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pizza-500"
-                />
-              </div>
+              <NumericStepper
+                label="Кусков в большой пицце"
+                value={localSettings.largePizzaSlices}
+                onChange={(value) => setLocalSettings({...localSettings, largePizzaSlices: value})}
+                min={6}
+                max={12}
+              />
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Цена маленькой относительно большой (%)
-                </label>
-                <input
-                  type="number"
-                  value={localSettings.smallPizzaPricePercent}
-                  onChange={(e) => setLocalSettings({...localSettings, smallPizzaPricePercent: Math.min(100, Math.max(0, parseInt(e.target.value) || 65))})}
-                  min={0}
-                  max={100}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pizza-500"
-                />
-              </div>
+              <NumericStepper
+                label="Цена маленькой относительно большой (%)"
+                value={localSettings.smallPizzaPricePercent}
+                onChange={(value) => setLocalSettings({...localSettings, smallPizzaPricePercent: value})}
+                min={0}
+                max={100}
+                step={5}
+              />
               
               <div className="border-t pt-4">
                 <label className="flex items-center space-x-2 cursor-pointer mb-2">
@@ -114,19 +98,13 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
                 </label>
                 
                 {localSettings.useFreePizza && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Каждая N-я пицца бесплатная
-                    </label>
-                    <input
-                      type="number"
-                      value={localSettings.freePizzaThreshold}
-                      onChange={(e) => setLocalSettings({...localSettings, freePizzaThreshold: parseInt(e.target.value) || 3})}
-                      min={2}
-                      max={10}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pizza-500"
-                    />
-                  </div>
+                  <NumericStepper
+                    label="Каждая N-я пицца бесплатная"
+                    value={localSettings.freePizzaThreshold}
+                    onChange={(value) => setLocalSettings({...localSettings, freePizzaThreshold: value})}
+                    min={2}
+                    max={10}
+                  />
                 )}
               </div>
             </div>
