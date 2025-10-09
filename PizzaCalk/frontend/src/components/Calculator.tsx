@@ -487,8 +487,8 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
                 </div>
               </button>
               
-              {/* Вариант 3: Убрать лишние (только если есть лишние 1-4 куска) */}
-              {extraSlices > 0 && extraSlices <= 4 && (
+              {/* Вариант 3: Убрать лишние (только если есть лишние 1-4 куска и результат > 0) */}
+              {extraSlices > 0 && extraSlices <= 4 && altPizzaCount > 0 && (
                 <button
                   onClick={() => setSelectedVariant('reduced')}
                   className={`border-2 rounded-lg p-3 transition-all ${
