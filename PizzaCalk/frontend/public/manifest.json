@@ -1,0 +1,14 @@
+{
+  "name": "PizzaCalk - Калькулятор пиццы",
+  "short_name": "PizzaCalk",
+  "description": "Калькулятор закупок пиццы для офиса",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#dc2626",
+  "orientation": "portrait",
+  "categories": ["food", "utilities", "productivity"],
+  "lang": "ru"
+}
+
+
