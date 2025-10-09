@@ -7,6 +7,10 @@ export interface Formula {
   name: string;
   displayName: string;
   formula: string;
+  // LaTeX-представление формулы для MathLive
+  formulaLatex?: string;
+  // MathJSON-представление формулы для Compute Engine/хранения
+  formulaJson?: unknown;
   inputs: string[]; // Имена входных переменных
   outputs: string[]; // Имена выходных переменных
   executionOrder: number;

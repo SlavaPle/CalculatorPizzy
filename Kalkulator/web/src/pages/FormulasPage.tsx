@@ -1,5 +1,14 @@
 import React from 'react'
 import { Box, Paper, Typography, TextField, Button, Stack, List, ListItem, ListItemText, Divider, Alert, IconButton, Tooltip, Grid } from '@mui/material'
+import { ComputeEngine } from '@cortex-js/compute-engine'
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'math-field': any
+    }
+  }
+}
 import { Delete as DeleteIcon, Edit as EditIcon, Save as SaveIcon, Add as AddIcon } from '@mui/icons-material'
 import { AuthService } from '@shared/auth/AuthService'
 
@@ -18,58 +27,119 @@ export const FormulasPage: React.FC = () => {
   const [items, setItems] = React.useState<ApiFormula[]>([])
   const [name, setName] = React.useState('')
   const [expression, setExpression] = React.useState('')
+  const [mathJson, setMathJson] = React.useState<unknown>(null)
   const [variables, setVariables] = React.useState<{ key: string; name?: string; unit?: string }[]>([])
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [parseError, setParseError] = React.useState<string | null>(null)
+  const mathfieldRef = React.useRef<any>(null)
+
+  React.useEffect(() => {
+    // Регистрация web-component MathLive
+    (async () => {
+      try {
+        await import('mathlive')
+      } catch (_) {
+        // noop
+      }
+    })()
+  }, [])
+
+  // Синхронизация внешних изменений expression в math-field, не ломая ручной ввод
+  React.useEffect(() => {
+    const mf = mathfieldRef.current as any
+    if (mf && typeof mf.value === 'string' && mf.value !== expression) {
+      // Обновляем только когда значение пришло извне (например, при выборе для редактирования)
+      mf.value = expression
+    }
+  }, [expression])
 
   const apiBase = (typeof window !== 'undefined' && (window as any).__API_URL__) || (import.meta as any)?.env?.VITE_API_URL || ''
 
   const extractFormulaInfo = React.useCallback((expr: string) => {
-    // Ищем знак равенства для определения результата
-    const equalIndex = expr.indexOf('=')
-    
-    if (equalIndex === -1) {
-      // Нет знака равенства - это выражение, результат неопределен
-      return { variables: [], result: null, isValid: false, error: 'Формула должна содержать знак равенства (=)' }
-    }
-    
-    // Разделяем на левую и правую части
-    const leftPart = expr.substring(0, equalIndex).trim()
-    const rightPart = expr.substring(equalIndex + 1).trim()
-    
-    // Проверяем, что только одна переменная в одной из частей
-    const leftOperators = /[\+\-\*\/\^\(\)\<\>\&\|\!]+/g
-    const leftParts = leftPart.split(leftOperators).map(p => p.trim()).filter(p => p.length > 0)
-    const leftVariables = leftParts.filter(part => /[A-Za-zА-Яа-я]/.test(part))
-    
-    const rightOperators = /[\+\-\*\/\^\(\)\<\>\&\|\!]+/g
-    const rightParts = rightPart.split(rightOperators).map(p => p.trim()).filter(p => p.length > 0)
-    const rightVariables = rightParts.filter(part => /[A-Za-zА-Яа-я]/.test(part))
-    
-    let result: string | null = null
-    let inputVariables: string[] = []
-    
-    if (leftVariables.length === 1 && rightVariables.length > 0) {
-      // Случай: result = expression (например: c = a + b)
-      result = leftVariables[0]
-      inputVariables = rightVariables
-    } else if (rightVariables.length === 1 && leftVariables.length > 0) {
-      // Случай: expression = result (например: a + b = c)
-      result = rightVariables[0]
-      inputVariables = leftVariables
-    } else {
-      return { variables: [], result: null, isValid: false, error: 'В одной из частей уравнения должна быть только одна переменная (результат)' }
-    }
-    
-    // Объединяем все переменные (включая результат)
-    const allVariables = [...new Set([result, ...inputVariables])]
-    
-    return { 
-      variables: allVariables, 
-      result, 
-      isValid: true, 
-      error: null 
+    // 1) Попытка разбора как LaTeX через Compute Engine (MathLive)
+    try {
+      const ce = new ComputeEngine()
+      const parsed = ce.parse(expr)
+      const json = (parsed as any)?.json
+
+      const isEqual = Array.isArray(json) && json[0] === 'Equal' && json.length >= 3
+      if (!isEqual) {
+        setParseError('Формула должна содержать знак равенства (=)')
+        return { variables: [], result: null, isValid: false, error: 'Формула должна содержать знак равенства (=)' }
+      }
+
+      const left = json[1]
+      const right = json[2]
+
+      // Собираем все символы из MathJSON
+      const collectSymbols = (node: any, acc: Set<string>) => {
+        if (!node) return
+        if (Array.isArray(node)) {
+          if (node[0] === 'Symbol' && typeof node[1] === 'string') {
+            acc.add(node[1])
+          } else {
+            // Рекурсивно обходим остальные узлы
+            for (let i = 1; i < node.length; i++) {
+              collectSymbols(node[i], acc)
+            }
+          }
+        }
+      }
+
+      const leftSyms = new Set<string>()
+      const rightSyms = new Set<string>()
+      collectSymbols(left, leftSyms)
+      collectSymbols(right, rightSyms)
+
+      let result: string | null = null
+      let inputVariables: string[] = []
+
+      if (leftSyms.size === 1 && rightSyms.size > 0) {
+        result = Array.from(leftSyms)[0]
+        inputVariables = Array.from(rightSyms)
+      } else if (rightSyms.size === 1 && leftSyms.size > 0) {
+        result = Array.from(rightSyms)[0]
+        inputVariables = Array.from(leftSyms)
+      } else {
+        setParseError('С одной стороны уравнения должна быть одна переменная (результат)')
+        return { variables: [], result: null, isValid: false, error: 'С одной стороны уравнения должна быть одна переменная (результат)' }
+      }
+
+      const allVariables = [...new Set([result, ...inputVariables])]
+      setParseError(null)
+      return { variables: allVariables, result, isValid: true, error: null }
+    } catch (_) {
+      // 2) Фоллбэк: простой парсинг по символу '=' для обычного текста
+      const equalIndex = expr.indexOf('=')
+      if (equalIndex === -1) {
+        setParseError('Формула должна содержать знак равенства (=)')
+        return { variables: [], result: null, isValid: false, error: 'Формула должна содержать знак равенства (=)' }
+      }
+      const leftPart = expr.substring(0, equalIndex).trim()
+      const rightPart = expr.substring(equalIndex + 1).trim()
+      const leftOperators = /[\+\-\*\/\^\(\)\<\>\&\|\!]+/g
+      const leftParts = leftPart.split(leftOperators).map(p => p.trim()).filter(p => p.length > 0)
+      const leftVariables = leftParts.filter(part => /[A-Za-zА-Яа-я]/.test(part))
+      const rightOperators = /[\+\-\*\/\^\(\)\<\>\&\|\!]+/g
+      const rightParts = rightPart.split(rightOperators).map(p => p.trim()).filter(p => p.length > 0)
+      const rightVariables = rightParts.filter(part => /[A-Za-zА-Яа-я]/.test(part))
+      let result: string | null = null
+      let inputVariables: string[] = []
+      if (leftVariables.length === 1 && rightVariables.length > 0) {
+        result = leftVariables[0]
+        inputVariables = rightVariables
+      } else if (rightVariables.length === 1 && leftVariables.length > 0) {
+        result = rightVariables[0]
+        inputVariables = leftVariables
+      } else {
+        setParseError('С одной стороны уравнения должна быть одна переменная (результат)')
+        return { variables: [], result: null, isValid: false, error: 'В одной из частей уравнения должна быть только одна переменная (результат)' }
+      }
+      const allVariables = [...new Set([result, ...inputVariables])]
+      setParseError(null)
+      return { variables: allVariables, result, isValid: true, error: null }
     }
   }, [])
 
@@ -132,7 +202,9 @@ export const FormulasPage: React.FC = () => {
         body: JSON.stringify({ 
           name: name.trim(), 
           expression: expression.trim(), 
-          variables
+          variables,
+          formulaLatex: expression.trim(),
+          formulaJson: mathJson
         })
       })
       const data = await res.json()
@@ -181,7 +253,9 @@ export const FormulasPage: React.FC = () => {
         body: JSON.stringify({ 
           name: name.trim(), 
           expression: expression.trim(), 
-          variables
+          variables,
+          formulaLatex: expression.trim(),
+          formulaJson: mathJson
         })
       })
       const data = await res.json()
@@ -217,8 +291,6 @@ export const FormulasPage: React.FC = () => {
         setName('')
         setExpression('')
         setVariables([])
-        setResultName('')
-        setResultUnit('')
       }
     } catch (e: any) {
       setError(e?.message || 'Ошибка удаления')
@@ -245,22 +317,66 @@ export const FormulasPage: React.FC = () => {
             onChange={(e) => setName(e.target.value)}
             disabled={isLoading}
           />
-          <TextField
-            label="Выражение"
-            value={expression}
-            onChange={(e) => setExpression(e.target.value)}
-            multiline
-            minRows={3}
-            disabled={isLoading}
-            placeholder="например: c = a + b или a + b = c"
-            error={!!extractFormulaInfo(expression).error}
-            helperText={extractFormulaInfo(expression).error || 'Формула должна содержать знак равенства (=)'}
-          />
+          <Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+              Выражение (MathLive)
+            </Typography>
+            <Box
+              sx={{
+                p: 1,
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: 1,
+                backgroundColor: 'background.paper',
+              }}
+            >
+              <math-field
+                ref={mathfieldRef}
+                onInput={() => {
+                  const next = (mathfieldRef.current as any)?.value ?? ''
+                  setExpression(next)
+                  try {
+                    const ce = new ComputeEngine()
+                    const parsed = ce.parse(next)
+                    setMathJson((parsed as any)?.json ?? null)
+                  } catch {
+                    setMathJson(null)
+                  }
+                }}
+                style={{ width: '100%', minHeight: 48 }}
+              />
+            </Box>
+            <Typography variant="caption" color={parseError ? 'error' : 'text.secondary'}>
+              {parseError || 'Формула должна содержать знак равенства (=)'}
+            </Typography>
+
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                MathJSON (строка)
+              </Typography>
+              <TextField
+                fullWidth
+                multiline
+                minRows={3}
+                value={mathJson ? JSON.stringify(mathJson) : ''}
+                InputProps={{ readOnly: true }}
+                sx={{
+                  '& .MuiInputBase-input': {
+                    fontFamily: 'monospace',
+                    fontSize: '0.85rem',
+                    lineHeight: 1.5,
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                  },
+                }}
+              />
+            </Box>
+          </Box>
           {!!variables.length && (
             <Box>
               <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>Переменные</Typography>
               <Grid container spacing={1}>
-                {variables.map((v, idx) => {
+                {variables.map((v) => {
                   const isResult = extractFormulaInfo(expression).result === v.key
                   return (
                     <React.Fragment key={v.key}>

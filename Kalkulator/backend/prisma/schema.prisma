@@ -141,6 +141,10 @@ model Formula {
   name            String
   displayName     String
   formula         String
+  // LaTeX для отображения в редакторе
+  formulaLatex    String?  @db.Text
+  // MathJSON для хранения семантики формулы
+  formulaJson     Json?
   inputs          String[] // Array of input variable names
   outputs         String[] // Array of output variable names
   executionOrder  Int      @default(0)
@@ -223,6 +227,10 @@ model Unit {
   baseUnit    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // Обратные связи для конвертаций
+  fromConversions UnitConversion[] @relation("FromUnit")
+  toConversions   UnitConversion[] @relation("ToUnit")
 
   @@map("units")
 }
