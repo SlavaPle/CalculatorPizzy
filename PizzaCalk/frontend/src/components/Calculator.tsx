@@ -33,13 +33,17 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
       smallPizzaPricePercent: 65,
       freePizzaThreshold: 3,
       useFreePizza: true,
-      freePizzaIsSmall: false
+      freePizzaIsSmall: false,
+      smallEqual: false // 6 < 8
     }
     
     if (saved) {
       const parsed = JSON.parse(saved)
-      // Добавляем новое поле если его нет в сохраненных данных
-      return { ...defaultSettings, ...parsed }
+      // Добавляем новые поля если их нет в сохраненных данных
+      const merged = { ...defaultSettings, ...parsed }
+      // Пересчитываем smallEqual при загрузке
+      merged.smallEqual = merged.smallPizzaSlices >= merged.largePizzaSlices
+      return merged
     }
     
     return defaultSettings
@@ -224,8 +228,7 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
   )
   
   // Определяем, показывать ли вариант с оптимальной комбинацией
-  const showOptimalOption = pizzaSettings.smallPizzaSlices !== pizzaSettings.largePizzaSlices && 
-                           optimalSmall > 0
+  const showOptimalOption = !pizzaSettings.smallEqual && optimalSmall > 0
   
   // Основной расчет (большие пиццы или выбранный вариант)
   let pizzaList = largePizzaList

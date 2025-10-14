@@ -10,6 +10,7 @@ export interface PizzaSettings {
   freePizzaThreshold: number
   useFreePizza: boolean // использовать бесплатную пиццу
   freePizzaIsSmall: boolean // бесплатная пицца малая (иначе большая)
+  smallEqual: boolean // вычисляемое: малая >= большой
 }
 
 interface SettingsModalProps {
@@ -25,7 +26,12 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
   if (!isOpen) return null
 
   const handleSave = () => {
-    onSave(localSettings)
+    // Пересчитываем smallEqual перед сохранением
+    const updatedSettings = {
+      ...localSettings,
+      smallEqual: localSettings.smallPizzaSlices >= localSettings.largePizzaSlices
+    }
+    onSave(updatedSettings)
   }
 
   const handleClearSavedUsers = () => {
