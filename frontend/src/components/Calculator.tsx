@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { User } from '../types'
 import { Plus, Users, Trash2, Calculator, Minus, Settings } from 'lucide-react'
 import SettingsModal, { PizzaSettings } from './SettingsModal'
-import { CalculationSchemeManager } from '../utils/calculationSchemes/CalculationSchemeManager'
+import { CalculationResultStore } from '../utils/CalculationResultStore'
 
 interface CalculatorProps {
   users: User[]
@@ -22,7 +22,10 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
   })
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [selectedVariant, setSelectedVariant] = useState<'current' | 'reduced' | 'small'>('current')
+  const [selectedVariant, setSelectedVariant] = useState<'current' | 'reduced' | 'small'>(() => {
+    const storeData = CalculationResultStore.getInstance().getData()
+    return storeData?.selectedVariant || 'current'
+  })
 
   // Pizza settings (from localStorage or default value)
   const [pizzaSettings, setPizzaSettings] = useState<PizzaSettings>(() => {
@@ -855,20 +858,24 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
             {users.length > 0 && (
               <button
                 onClick={() => {
-                  // Use selected calculation scheme
-                  const schemeManager = CalculationSchemeManager.getInstance()
-                  const selectedScheme = schemeManager.getScheme(pizzaSettings.calculationScheme) || schemeManager.getDefaultScheme()
-
-                  const result = selectedScheme.calculate(users, pizzaSettings)
+                  // Determine correct pizza list based on variant
+                  let finalPizzaList = pizzaList
+                  if (selectedVariant === 'reduced') {
+                    finalPizzaList = altPizzaList
+                  }
 
                   // Form data for Results
                   const calculationData = {
                     selectedVariant,
-                    pizzaList: result.optimalPizzas,
-                    userSlicesDistribution: result.userSlicesDistribution,
+                    pizzaList: finalPizzaList,
+                    userSlicesDistribution: actualSlices,
                     pizzaSettings,
-                    calculationResult: result
                   }
+
+                  // Save to Singleton
+                  const store = CalculationResultStore.getInstance()
+                  store.clear()
+                  store.setData(calculationData)
 
                   onShowResults(calculationData)
                 }}

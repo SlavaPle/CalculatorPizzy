@@ -4,6 +4,8 @@ import Header from './components/Header'
 import CalculatorComponent from './components/Calculator'
 import Results from './components/Results'
 
+import { CalculationResultStore } from './utils/CalculationResultStore'
+
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [isGuest, setIsGuest] = useState(false)
@@ -25,6 +27,7 @@ function App() {
     setIsGuest(false)
     setUsers([])
     setResult(null)
+    CalculationResultStore.getInstance().clear()
   }
 
   const handleShowResults = (calculationData: any) => {
@@ -33,8 +36,9 @@ function App() {
       return
     }
 
-    // Get data from Calculator
-    const { pizzaList, userSlicesDistribution } = calculationData
+    // Get data from Singleton (preferred) or argument
+    const storeData = CalculationResultStore.getInstance().getData()
+    const { pizzaList, userSlicesDistribution } = storeData || calculationData
 
     // Calculate statistics
     const pizzaCount = pizzaList.length
@@ -58,7 +62,7 @@ function App() {
       freePizzaCount,
       regularPizzaCount: pizzaCount - freePizzaCount,
       userSlicesDistribution, // Pass slice distribution
-      calculationData // Pass all calculation data
+      calculationData: storeData || calculationData // Pass all calculation data
     }
 
     setResult(result)
