@@ -13,8 +13,7 @@ export class ProportionalPriceScheme implements ICalculationScheme {
     const regularPizzaCount = pizzaCount - freePizzaCount
 
     // Calculate price per slice for large pizza
-    const largePricePerSlice = settings.largePizzaPrice / settings.largePizzaSlices
-    const smallPricePerSlice = (settings.largePizzaPrice * settings.smallPizzaPricePercent / 100) / settings.smallPizzaSlices
+
 
     // Create pizza list
     const optimalPizzas = []

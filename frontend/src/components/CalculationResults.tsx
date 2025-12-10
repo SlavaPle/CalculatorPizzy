@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CalculationResult } from '../types'
-import { Users, Pizza, Utensils, DollarSign, Download, Share2 } from 'lucide-react'
+import { Users, Pizza, DollarSign, Download, Share2 } from 'lucide-react'
 
 interface CalculationResultsProps {
   result: CalculationResult

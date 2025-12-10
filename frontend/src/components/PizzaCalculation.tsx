@@ -1,5 +1,5 @@
 import { User } from '../types'
-import { ArrowLeft, Calculator, Pizza, Users, Gift, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Calculator, Users, Gift, CheckCircle } from 'lucide-react'
 
 interface PizzaCalculationProps {
   calculation: any

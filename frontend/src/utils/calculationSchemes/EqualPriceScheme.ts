@@ -13,8 +13,7 @@ export class EqualPriceScheme implements ICalculationScheme {
     const regularPizzaCount = pizzaCount - freePizzaCount
 
     // Calculate price per slice (equal for all slices)
-    const totalPizzaPrice = regularPizzaCount * settings.largePizzaPrice
-    const pricePerSlice = totalPizzaPrice / totalSlices
+
 
     // Create pizza list
     const optimalPizzas = []
