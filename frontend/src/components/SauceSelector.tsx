@@ -69,7 +69,7 @@ const SauceSelector = ({ selectedSauces, onSaucesChange }: SauceSelectorProps) =
 
   return (
     <div className="space-y-6">
-      {/* Предустановленные соусы */}
+      {/* Preset sauces */}
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">
           Popular sauces
@@ -87,7 +87,7 @@ const SauceSelector = ({ selectedSauces, onSaucesChange }: SauceSelectorProps) =
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
-              
+
               <div className="text-sm text-gray-600 space-y-1">
                 <div className="flex justify-between">
                   <span>Small:</span>
@@ -107,7 +107,7 @@ const SauceSelector = ({ selectedSauces, onSaucesChange }: SauceSelectorProps) =
         </div>
       </div>
 
-      {/* Создание кастомного соуса */}
+      {/* Create custom sauce */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-medium text-gray-900">
@@ -183,7 +183,7 @@ const SauceSelector = ({ selectedSauces, onSaucesChange }: SauceSelectorProps) =
         )}
       </div>
 
-      {/* Выбранные соусы */}
+      {/* Selected sauces */}
       {selectedSauces.length > 0 && (
         <div>
           <h3 className="text-lg font-medium text-gray-900 mb-4">
@@ -195,7 +195,7 @@ const SauceSelector = ({ selectedSauces, onSaucesChange }: SauceSelectorProps) =
                 <div>
                   <span className="font-medium text-gray-900">{sauce.name}</span>
                   <span className="text-sm text-gray-600 ml-2">
-                    от {Math.min(...Object.values(sauce.price))}₽
+                    from {Math.min(...Object.values(sauce.price))}₽
                   </span>
                 </div>
                 <button
@@ -210,7 +210,7 @@ const SauceSelector = ({ selectedSauces, onSaucesChange }: SauceSelectorProps) =
         </div>
       )}
 
-      {/* Информация о соусах */}
+      {/* Sauce information */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h4 className="font-medium text-blue-900 mb-2">
           How do sauces work?

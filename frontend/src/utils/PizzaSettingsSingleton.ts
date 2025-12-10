@@ -6,8 +6,8 @@ export interface PizzaSettings {
   freePizzaThreshold: number
   useFreePizza: boolean
   freePizzaIsSmall: boolean
-  smallEqual: boolean // вычисляемое поле
-  calculationScheme: string // схема расчета
+  smallEqual: boolean // calculated field
+  calculationScheme: string // calculation scheme
 }
 
 class PizzaSettingsSingleton {
@@ -43,7 +43,7 @@ class PizzaSettingsSingleton {
     if (saved) {
       const parsed = JSON.parse(saved)
       const merged = { ...defaultSettings, ...parsed }
-      // Вычисляем smallEqual при загрузке
+      // Calculate smallEqual on load
       merged.smallEqual = merged.smallPizzaSlices >= merged.largePizzaSlices
       return merged
     }
@@ -57,12 +57,12 @@ class PizzaSettingsSingleton {
 
   public updateSettings(newSettings: Partial<PizzaSettings>): void {
     this.settings = { ...this.settings, ...newSettings }
-    
-    // Автоматически пересчитываем smallEqual при изменении размеров пицц
+
+    // Automatically recalculate smallEqual when pizza sizes apply
     if (newSettings.smallPizzaSlices !== undefined || newSettings.largePizzaSlices !== undefined) {
       this.settings.smallEqual = this.settings.smallPizzaSlices >= this.settings.largePizzaSlices
     }
-    
+
     this.saveSettings()
   }
 

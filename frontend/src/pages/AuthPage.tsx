@@ -23,26 +23,26 @@ const AuthPage = ({ onLogin, onGuestMode }: AuthPageProps) => {
     e.preventDefault()
     setErrors([])
 
-    // Валидация
+    // Validation
     const newErrors: string[] = []
-    
+
     if (!formData.name.trim()) {
       newErrors.push('Enter name')
     }
-    
+
     if (!isLogin) {
       if (!formData.email.trim()) {
         newErrors.push('Enter email')
       } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
         newErrors.push('Enter valid email')
       }
-      
+
       if (!formData.password) {
         newErrors.push('Enter password')
       } else if (formData.password.length < 6) {
         newErrors.push('Password must contain at least 6 characters')
       }
-      
+
       if (!isLogin && formData.password !== formData.confirmPassword) {
         newErrors.push('Passwords do not match')
       }
@@ -53,7 +53,7 @@ const AuthPage = ({ onLogin, onGuestMode }: AuthPageProps) => {
       return
     }
 
-    // Создание пользователя
+    // User creation
     const user: User = {
       id: `user-${Date.now()}`,
       name: formData.name.trim(),
@@ -77,29 +77,29 @@ const AuthPage = ({ onLogin, onGuestMode }: AuthPageProps) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        {/* Заголовок */}
+        {/* Header */}
         <div className="text-center">
           <Link to="/" className="inline-flex items-center space-x-2 text-pizza-600 hover:text-pizza-700 mb-4">
             <ArrowLeft className="h-5 w-5" />
             <span>Back to home</span>
           </Link>
-          
+
           <div className="flex justify-center mb-4">
             <Pizza className="h-12 w-12 text-pizza-600" />
           </div>
-          
+
           <h2 className="text-3xl font-bold text-gray-900">
             {isLogin ? 'Login to account' : 'Create account'}
           </h2>
           <p className="mt-2 text-gray-600">
-            {isLogin 
+            {isLogin
               ? 'Login to your account to save settings'
               : 'Create an account to save your calculations'
             }
           </p>
         </div>
 
-        {/* Форма */}
+        {/* Form */}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
@@ -177,7 +177,7 @@ const AuthPage = ({ onLogin, onGuestMode }: AuthPageProps) => {
             )}
           </div>
 
-          {/* Ошибки */}
+          {/* Errors */}
           {errors.length > 0 && (
             <div className="bg-red-50 border border-red-200 rounded-md p-4">
               <ul className="text-sm text-red-600 space-y-1">
@@ -188,7 +188,7 @@ const AuthPage = ({ onLogin, onGuestMode }: AuthPageProps) => {
             </div>
           )}
 
-          {/* Кнопки */}
+          {/* Buttons */}
           <div className="space-y-4">
             <button
               type="submit"
@@ -203,8 +203,8 @@ const AuthPage = ({ onLogin, onGuestMode }: AuthPageProps) => {
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-pizza-600 hover:text-pizza-700 text-sm"
               >
-                {isLogin 
-                  ? 'No account? Create' 
+                {isLogin
+                  ? 'No account? Create'
                   : 'Already have an account? Login'
                 }
               </button>
@@ -229,7 +229,7 @@ const AuthPage = ({ onLogin, onGuestMode }: AuthPageProps) => {
           </div>
         </form>
 
-        {/* Информация */}
+        {/* Information */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h4 className="font-medium text-blue-900 mb-2">
             Why do you need an account?

@@ -23,7 +23,7 @@ const UserForm = ({ onAddUser }: UserFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!name.trim()) {
       alert('Enter participant name')
       return
@@ -41,7 +41,7 @@ const UserForm = ({ onAddUser }: UserFormProps) => {
       preferredTypes: preferredTypes.length > 0 ? preferredTypes : undefined
     })
 
-    // Сброс формы
+    // Reset form
     setName('')
     setMinSlices(1)
     setMaxSlices(3)
@@ -50,8 +50,8 @@ const UserForm = ({ onAddUser }: UserFormProps) => {
   }
 
   const handleTypeToggle = (type: string) => {
-    setPreferredTypes(prev => 
-      prev.includes(type) 
+    setPreferredTypes(prev =>
+      prev.includes(type)
         ? prev.filter(t => t !== type)
         : [...prev, type]
     )
@@ -73,7 +73,7 @@ const UserForm = ({ onAddUser }: UserFormProps) => {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-medium text-gray-900">
-          Добавить участника
+          Add participant
         </h3>
         <button
           type="button"
@@ -151,7 +151,7 @@ const UserForm = ({ onAddUser }: UserFormProps) => {
           type="submit"
           className="btn-primary flex-1"
         >
-          Добавить участника
+          Add participant
         </button>
         <button
           type="button"

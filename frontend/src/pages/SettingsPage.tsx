@@ -25,7 +25,7 @@ const SettingsPage = ({ currentUser, isGuest }: SettingsPageProps) => {
   })
 
   const handleSaveSettings = () => {
-    // Здесь будет логика сохранения настроек
+    // Logic for saving settings will be here
     alert('Settings saved!')
   }
 
@@ -65,7 +65,7 @@ const SettingsPage = ({ currentUser, isGuest }: SettingsPageProps) => {
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Настройки
+          Settings
         </h1>
         <p className="text-gray-600">
           Configure the app to your preferences
@@ -73,9 +73,9 @@ const SettingsPage = ({ currentUser, isGuest }: SettingsPageProps) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Основные настройки */}
+        {/* Main settings */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Общие настройки */}
+          {/* General settings */}
           <div className="card">
             <div className="flex items-center space-x-2 mb-6">
               <Settings className="h-5 w-5 text-pizza-600" />
@@ -144,7 +144,7 @@ const SettingsPage = ({ currentUser, isGuest }: SettingsPageProps) => {
             </div>
           </div>
 
-          {/* Настройки пиццы */}
+          {/* Pizza settings */}
           <div className="card">
             <div className="flex items-center space-x-2 mb-6">
               <CreditCard className="h-5 w-5 text-pizza-600" />
@@ -191,9 +191,9 @@ const SettingsPage = ({ currentUser, isGuest }: SettingsPageProps) => {
           </div>
         </div>
 
-        {/* Боковая панель */}
+        {/* Sidebar */}
         <div className="space-y-6">
-          {/* Профиль пользователя */}
+          {/* User profile */}
           <div className="card">
             <div className="flex items-center space-x-2 mb-4">
               <UserIcon className="h-5 w-5 text-pizza-600" />
@@ -258,7 +258,7 @@ const SettingsPage = ({ currentUser, isGuest }: SettingsPageProps) => {
             </div>
           </div>
 
-          {/* Действия */}
+          {/* Actions */}
           <div className="card">
             <h3 className="font-semibold text-gray-900 mb-4">
               Actions
@@ -283,7 +283,7 @@ const SettingsPage = ({ currentUser, isGuest }: SettingsPageProps) => {
             </div>
           </div>
 
-          {/* Статистика */}
+          {/* Statistics */}
           <div className="card">
             <h3 className="font-semibold text-gray-900 mb-4">
               Statistics

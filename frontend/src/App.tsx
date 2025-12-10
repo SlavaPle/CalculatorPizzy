@@ -33,14 +33,14 @@ function App() {
       return
     }
 
-    // Получаем данные от Calculator
+    // Get data from Calculator
     const { pizzaList, userSlicesDistribution } = calculationData
-    
-    // Подсчитываем статистику
+
+    // Calculate statistics
     const pizzaCount = pizzaList.length
     const freePizzaCount = pizzaList.filter((p: any) => p.isFree).length
     const totalSlices = pizzaList.reduce((sum: number, p: any) => sum + p.slices, 0)
-    
+
     const result = {
       optimalPizzas: pizzaList.map((pizza: any, i: number) => ({
         id: `pizza-${i}`,
@@ -57,21 +57,21 @@ function App() {
       pizzaCount,
       freePizzaCount,
       regularPizzaCount: pizzaCount - freePizzaCount,
-      userSlicesDistribution, // Передаем распределение кусков
-      calculationData // Передаем все данные расчета
+      userSlicesDistribution, // Pass slice distribution
+      calculationData // Pass all calculation data
     }
-    
+
     setResult(result)
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header 
+      <Header
         currentUser={currentUser}
         isGuest={isGuest}
         onLogout={handleLogout}
       />
-      
+
       <main className="mx-auto px-4 py-4" style={{ maxWidth: '800px' }}>
         {!currentUser && !isGuest ? (
           <div className="text-center py-16">
@@ -97,7 +97,7 @@ function App() {
             </div>
           </div>
         ) : result ? (
-          <Results 
+          <Results
             result={result}
             users={users}
             onBack={() => setResult(null)}
@@ -107,7 +107,7 @@ function App() {
             }}
           />
         ) : (
-          <CalculatorComponent 
+          <CalculatorComponent
             users={users}
             setUsers={setUsers}
             onShowResults={handleShowResults}

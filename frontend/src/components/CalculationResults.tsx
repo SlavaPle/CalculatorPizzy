@@ -10,9 +10,9 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
   const [activeView, setActiveView] = useState<'summary' | 'detailed' | 'visualization'>('summary')
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('ru-RU', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'RUB',
+      currency: 'USD',
       minimumFractionDigits: 0
     }).format(amount)
   }
@@ -40,7 +40,7 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
 
   const handleShare = async () => {
     const shareText = `🍕 Pizza order calculation\n\nTotal cost: ${formatCurrency(result.totalCost)}\nNumber of pizzas: ${result.optimalPizzas.length}\nFree pizzas: ${result.optimalPizzas.filter(p => p.isFree).length}\n\nDetails in PizzaCalk`
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -59,7 +59,7 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Заголовок с действиями */}
+      {/* Header with actions */}
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-semibold text-gray-900">
           Calculation result
@@ -82,7 +82,7 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
         </div>
       </div>
 
-      {/* Переключатель представлений */}
+      {/* View switcher */}
       <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
         {[
           { id: 'summary', label: 'Summary', icon: <DollarSign className="h-4 w-4" /> },
@@ -92,11 +92,10 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
           <button
             key={view.id}
             onClick={() => setActiveView(view.id as any)}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeView === view.id
-                ? 'bg-white text-pizza-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
+            className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeView === view.id
+              ? 'bg-white text-pizza-600 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+              }`}
           >
             {view.icon}
             <span>{view.label}</span>
@@ -104,7 +103,7 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
         ))}
       </div>
 
-      {/* Сводка */}
+      {/* Summary */}
       {activeView === 'summary' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="card text-center">
@@ -113,14 +112,14 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
             </div>
             <div className="text-gray-600">Total cost</div>
           </div>
-          
+
           <div className="card text-center">
             <div className="text-3xl font-bold text-pizza-600 mb-2">
               {result.optimalPizzas.length}
             </div>
             <div className="text-gray-600">Total pizzas</div>
           </div>
-          
+
           <div className="card text-center">
             <div className="text-3xl font-bold text-green-600 mb-2">
               {result.optimalPizzas.filter(p => p.isFree).length}
@@ -130,10 +129,10 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
         </div>
       )}
 
-      {/* Детальная информация */}
+      {/* Detailed information */}
       {activeView === 'detailed' && (
         <div className="space-y-6">
-          {/* Список пицц */}
+          {/* Pizza list */}
           <div>
             <h4 className="text-lg font-semibold text-gray-900 mb-4">
               Ordered pizzas
@@ -160,10 +159,10 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
             </div>
           </div>
 
-          {/* Распределение по пользователям */}
+          {/* User distribution */}
           <div>
             <h4 className="text-lg font-semibold text-gray-900 mb-4">
-              Распределение стоимости
+              Cost distribution
             </h4>
             <div className="space-y-3">
               {Object.entries(result.distribution).map(([userId, userData]) => (
@@ -186,7 +185,7 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
         </div>
       )}
 
-      {/* Визуализация */}
+      {/* Visualization */}
       {activeView === 'visualization' && (
         <div className="space-y-6">
           <div className="text-center">
@@ -196,9 +195,8 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {result.optimalPizzas.map((pizza, index) => (
                 <div key={pizza.id} className="text-center">
-                  <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-white font-bold text-lg mb-2 ${
-                    pizza.isFree ? 'bg-green-500' : 'bg-pizza-500'
-                  }`}>
+                  <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-white font-bold text-lg mb-2 ${pizza.isFree ? 'bg-green-500' : 'bg-pizza-500'
+                    }`}>
                     🍕
                   </div>
                   <div className="text-sm font-medium text-gray-900">
@@ -215,10 +213,10 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
             </div>
           </div>
 
-          {/* График распределения */}
+          {/* Distribution chart */}
           <div className="bg-white p-6 rounded-lg border">
             <h5 className="font-medium text-gray-900 mb-4">
-              Распределение стоимости
+              Cost distribution
             </h5>
             <div className="space-y-3">
               {Object.entries(result.distribution).map(([userId, userData]) => {
@@ -230,7 +228,7 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
                       <span>{formatCurrency(userData.cost)} ({percentage.toFixed(1)}%)</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
+                      <div
                         className="bg-pizza-500 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${percentage}%` }}
                       ></div>

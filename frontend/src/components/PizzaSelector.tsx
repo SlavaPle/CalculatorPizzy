@@ -76,7 +76,7 @@ const PizzaSelector = ({ selectedPizzas, onPizzasChange }: PizzaSelectorProps) =
 
   return (
     <div className="space-y-6">
-      {/* Предустановленные пиццы */}
+      {/* Preset pizzas */}
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">
           Popular pizzas
@@ -94,7 +94,7 @@ const PizzaSelector = ({ selectedPizzas, onPizzasChange }: PizzaSelectorProps) =
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
-              
+
               <div className="text-sm text-gray-600 space-y-1">
                 <div className="flex justify-between">
                   <span>Small:</span>
@@ -114,7 +114,7 @@ const PizzaSelector = ({ selectedPizzas, onPizzasChange }: PizzaSelectorProps) =
         </div>
       </div>
 
-      {/* Создание кастомной пиццы */}
+      {/* Create custom pizza */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-medium text-gray-900">
@@ -213,7 +213,7 @@ const PizzaSelector = ({ selectedPizzas, onPizzasChange }: PizzaSelectorProps) =
         )}
       </div>
 
-      {/* Выбранные пиццы */}
+      {/* Selected pizzas */}
       {selectedPizzas.length > 0 && (
         <div>
           <h3 className="text-lg font-medium text-gray-900 mb-4">
@@ -225,7 +225,7 @@ const PizzaSelector = ({ selectedPizzas, onPizzasChange }: PizzaSelectorProps) =
                 <div>
                   <span className="font-medium text-gray-900">{pizza.name}</span>
                   <span className="text-sm text-gray-600 ml-2">
-                    от {Math.min(...Object.values(pizza.basePrice))}₽
+                    from {Math.min(...Object.values(pizza.basePrice))}₽
                   </span>
                 </div>
                 <button

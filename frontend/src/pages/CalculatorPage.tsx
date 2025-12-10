@@ -53,11 +53,11 @@ const CalculatorPage = ({ currentUser, isGuest }: CalculatorPageProps) => {
       createdAt: new Date()
     }
 
-    // Простой расчет для демонстрации
+    // Simple calculation for demonstration
     const totalSlices = users.reduce((sum, user) => sum + user.maxSlices, 0)
     const pizzaCount = Math.ceil(totalSlices / 8)
     const freePizzaCount = Math.floor(pizzaCount / 3)
-    
+
     const result = {
       optimalPizzas: Array.from({ length: pizzaCount }, (_, i) => ({
         id: `pizza-${i}`,
@@ -72,7 +72,7 @@ const CalculatorPage = ({ currentUser, isGuest }: CalculatorPageProps) => {
       freePizzaValue: freePizzaCount * 800,
       distribution: {}
     }
-    
+
     setCalculationResult(result)
     setActiveTab('results')
   }
@@ -95,7 +95,7 @@ const CalculatorPage = ({ currentUser, isGuest }: CalculatorPageProps) => {
         </p>
       </div>
 
-      {/* Табы */}
+      {/* Tabs */}
       <div className="mb-8">
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
@@ -103,11 +103,10 @@ const CalculatorPage = ({ currentUser, isGuest }: CalculatorPageProps) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.id
+                className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
                     ? 'border-pizza-500 text-pizza-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                  }`}
               >
                 {tab.icon}
                 <span>{tab.label}</span>
@@ -122,7 +121,7 @@ const CalculatorPage = ({ currentUser, isGuest }: CalculatorPageProps) => {
         </div>
       </div>
 
-      {/* Контент табов */}
+      {/* Tab content */}
       <div className="card">
         {activeTab === 'users' && (
           <div>
@@ -134,9 +133,9 @@ const CalculatorPage = ({ currentUser, isGuest }: CalculatorPageProps) => {
                 {users.length} participants
               </span>
             </div>
-            
+
             <UserForm onAddUser={handleAddUser} />
-            
+
             {users.length > 0 && (
               <div className="mt-8">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
@@ -170,7 +169,7 @@ const CalculatorPage = ({ currentUser, isGuest }: CalculatorPageProps) => {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
               Pizza selection
             </h2>
-            <PizzaSelector 
+            <PizzaSelector
               selectedPizzas={selectedPizzas}
               onPizzasChange={setSelectedPizzas}
             />
@@ -182,7 +181,7 @@ const CalculatorPage = ({ currentUser, isGuest }: CalculatorPageProps) => {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
               Sauce selection
             </h2>
-            <SauceSelector 
+            <SauceSelector
               selectedSauces={selectedSauces}
               onSaucesChange={setSelectedSauces}
             />
@@ -214,7 +213,7 @@ const CalculatorPage = ({ currentUser, isGuest }: CalculatorPageProps) => {
         )}
       </div>
 
-      {/* Кнопка расчета */}
+      {/* Calculation button */}
       {activeTab !== 'results' && (
         <div className="mt-8 text-center">
           <button

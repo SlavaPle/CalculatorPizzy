@@ -28,25 +28,25 @@ const HomePage = ({ onLogin, onGuestMode }: HomePageProps) => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Hero секция */}
+      {/* Hero section */}
       <div className="text-center py-16">
         <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
           Pizza Purchase Calculator
         </h1>
         <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-          Smart calculation of optimal pizza quantity for your office. 
+          Smart calculation of optimal pizza quantity for your office.
           We consider each participant's preferences and distribute costs fairly.
         </p>
-        
+
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link 
-            to="/auth" 
+          <Link
+            to="/auth"
             className="btn-primary text-lg px-8 py-3 inline-flex items-center"
           >
             Start calculation
             <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
-          <button 
+          <button
             onClick={onGuestMode}
             className="btn-secondary text-lg px-8 py-3"
           >
@@ -55,12 +55,12 @@ const HomePage = ({ onLogin, onGuestMode }: HomePageProps) => {
         </div>
       </div>
 
-      {/* Особенности */}
+      {/* Features */}
       <div className="py-16">
         <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
           Why PizzaCalk?
         </h2>
-        
+
         <div className="grid md:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <div key={index} className="card text-center">
@@ -78,7 +78,7 @@ const HomePage = ({ onLogin, onGuestMode }: HomePageProps) => {
         </div>
       </div>
 
-      {/* Как это работает */}
+      {/* How it works */}
       <div className="py-16 bg-white rounded-lg shadow-sm">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -114,8 +114,8 @@ const HomePage = ({ onLogin, onGuestMode }: HomePageProps) => {
         <p className="text-lg text-gray-600 mb-8">
           Create your first calculation in 2 minutes
         </p>
-        <Link 
-          to="/calculator" 
+        <Link
+          to="/calculator"
           className="btn-primary text-lg px-8 py-3 inline-flex items-center"
         >
           Open calculator

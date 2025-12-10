@@ -3,16 +3,16 @@ import { X, Trash2, Save } from 'lucide-react'
 import NumericStepper from './NumericStepper'
 import { CalculationSchemeManager } from '../utils/calculationSchemes/CalculationSchemeManager'
 
-// Компонент для визуализации пиццы с кусками
+// Component for visualizing pizza with slices
 const PizzaVisualization = ({ slices, size, label }: { slices: number, size: 'small' | 'large', label: string }) => {
   const pizzaSize = size === 'small' ? 'w-16 h-16' : 'w-20 h-20'
   const radius = size === 'small' ? 24 : 30
-  
+
   return (
     <div className="flex flex-col items-center space-y-2">
       <div className="text-sm font-medium text-gray-700">{label}</div>
       <div className={`relative ${pizzaSize} rounded-full border-2 border-gray-300 bg-orange-100 flex items-center justify-center`}>
-        {/* Разделители между кусками */}
+        {/* Separators between slices */}
         <div className="absolute inset-0">
           {Array.from({ length: slices }).map((_, index) => {
             const angle = (360 / slices) * index
@@ -20,7 +20,7 @@ const PizzaVisualization = ({ slices, size, label }: { slices: number, size: 'sm
             const y1 = Math.sin((angle - 90) * Math.PI / 180) * (radius * 0.3)
             const x2 = Math.cos((angle - 90) * Math.PI / 180) * (radius * 0.8)
             const y2 = Math.sin((angle - 90) * Math.PI / 180) * (radius * 0.8)
-            
+
             return (
               <div
                 key={`line-${index}`}
@@ -36,7 +36,7 @@ const PizzaVisualization = ({ slices, size, label }: { slices: number, size: 'sm
             )
           })}
         </div>
-        {/* Центр пиццы */}
+        {/* Pizza center */}
         <div className={`absolute w-2 h-2 bg-orange-400 rounded-full`}></div>
       </div>
       <div className="text-xs text-gray-600">{slices} slices</div>
@@ -48,12 +48,12 @@ export interface PizzaSettings {
   smallPizzaSlices: number
   largePizzaSlices: number
   largePizzaPrice: number
-  smallPizzaPricePercent: number // процент цены маленькой от большой (0-100)
+  smallPizzaPricePercent: number // percentage of small pizza price relative to large (0-100)
   freePizzaThreshold: number
-  useFreePizza: boolean // использовать бесплатную пиццу
-  freePizzaIsSmall: boolean // бесплатная пицца малая (иначе большая)
-  smallEqual: boolean // вычисляемое: малая >= большой
-  calculationScheme: string // схема расчета
+  useFreePizza: boolean // use free pizza
+  freePizzaIsSmall: boolean // free pizza is small (otherwise large)
+  smallEqual: boolean // calculated: small >= large
+  calculationScheme: string // calculation scheme
 }
 
 interface SettingsModalProps {
@@ -66,16 +66,16 @@ interface SettingsModalProps {
 const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps) => {
   const [localSettings, setLocalSettings] = useState(settings)
   const [availableSchemes, setAvailableSchemes] = useState<any[]>([])
-  
+
   useEffect(() => {
     const schemeManager = CalculationSchemeManager.getInstance()
     setAvailableSchemes(schemeManager.getAllSchemes())
   }, [])
-  
+
   if (!isOpen) return null
 
   const handleSave = () => {
-    // Пересчитываем smallEqual перед сохранением
+    // Recalculate smallEqual before saving
     const updatedSettings = {
       ...localSettings,
       smallEqual: localSettings.smallPizzaSlices >= localSettings.largePizzaSlices
@@ -100,7 +100,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto">
-        {/* Заголовок */}
+        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 sticky top-0 bg-white">
           <h2 className="text-xl font-bold text-gray-900">Settings</h2>
           <button
@@ -111,20 +111,20 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
           </button>
         </div>
 
-        {/* Контент */}
+        {/* Content */}
         <div className="p-4 space-y-6">
-          {/* Настройки пиццы */}
+          {/* Pizza settings */}
           <div>
             <h3 className="font-medium text-gray-900 mb-3">Calculation settings</h3>
             <div className="space-y-4">
-              {/* Схема расчета */}
+              {/* Calculation scheme */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Calculation scheme
                 </label>
                 <select
                   value={localSettings.calculationScheme}
-                  onChange={(e) => setLocalSettings({...localSettings, calculationScheme: e.target.value})}
+                  onChange={(e) => setLocalSettings({ ...localSettings, calculationScheme: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pizza-500 focus:border-pizza-500"
                 >
                   {availableSchemes.map((scheme) => (
@@ -137,65 +137,65 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
                   {availableSchemes.find(s => s.id === localSettings.calculationScheme)?.description}
                 </p>
               </div>
-              {/* Визуализация пицц */}
+              {/* Pizza visualization */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="text-sm font-medium text-gray-700 mb-3">Pizza visualization</div>
                 <div className="flex justify-center space-x-8">
-                  <PizzaVisualization 
-                    slices={localSettings.smallPizzaSlices} 
-                    size="small" 
-                    label="Small pizza" 
+                  <PizzaVisualization
+                    slices={localSettings.smallPizzaSlices}
+                    size="small"
+                    label="Small pizza"
                   />
-                  <PizzaVisualization 
-                    slices={localSettings.largePizzaSlices} 
-                    size="large" 
-                    label="Large pizza" 
+                  <PizzaVisualization
+                    slices={localSettings.largePizzaSlices}
+                    size="large"
+                    label="Large pizza"
                   />
                 </div>
               </div>
-              
+
               <NumericStepper
                 label="Slices in small pizza"
                 value={localSettings.smallPizzaSlices}
-                onChange={(value) => setLocalSettings({...localSettings, smallPizzaSlices: value})}
+                onChange={(value) => setLocalSettings({ ...localSettings, smallPizzaSlices: value })}
                 min={4}
                 max={10}
               />
-              
+
               <NumericStepper
                 label="Slices in large pizza"
                 value={localSettings.largePizzaSlices}
-                onChange={(value) => setLocalSettings({...localSettings, largePizzaSlices: value})}
+                onChange={(value) => setLocalSettings({ ...localSettings, largePizzaSlices: value })}
                 min={6}
                 max={12}
               />
-              
+
               <NumericStepper
                 label="Small pizza price relative to large (%)"
                 value={localSettings.smallPizzaPricePercent}
-                onChange={(value) => setLocalSettings({...localSettings, smallPizzaPricePercent: value})}
+                onChange={(value) => setLocalSettings({ ...localSettings, smallPizzaPricePercent: value })}
                 min={0}
                 max={100}
                 step={5}
               />
-              
+
               <div className="border-t pt-4">
                 <label className="flex items-center space-x-2 cursor-pointer mb-2">
                   <input
                     type="checkbox"
                     checked={localSettings.useFreePizza}
-                    onChange={(e) => setLocalSettings({...localSettings, useFreePizza: e.target.checked})}
+                    onChange={(e) => setLocalSettings({ ...localSettings, useFreePizza: e.target.checked })}
                     className="h-4 w-4 text-pizza-600 focus:ring-pizza-500 border-gray-300 rounded"
                   />
                   <span className="text-sm font-medium text-gray-700">Free pizza on order</span>
                 </label>
-                
+
                 {localSettings.useFreePizza && (
                   <>
                     <NumericStepper
                       label="Every Nth pizza is free"
                       value={localSettings.freePizzaThreshold}
-                      onChange={(value) => setLocalSettings({...localSettings, freePizzaThreshold: value})}
+                      onChange={(value) => setLocalSettings({ ...localSettings, freePizzaThreshold: value })}
                       min={2}
                       max={10}
                     />
@@ -203,7 +203,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
                       <input
                         type="checkbox"
                         checked={localSettings.freePizzaIsSmall}
-                        onChange={(e) => setLocalSettings({...localSettings, freePizzaIsSmall: e.target.checked})}
+                        onChange={(e) => setLocalSettings({ ...localSettings, freePizzaIsSmall: e.target.checked })}
                         className="h-4 w-4 text-pizza-600 focus:ring-pizza-500 border-gray-300 rounded"
                       />
                       <span className="text-sm text-gray-700">Small pizza (otherwise large)</span>
@@ -214,7 +214,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
             </div>
           </div>
 
-          {/* Управление данными */}
+          {/* Data management */}
           <div>
             <h3 className="font-medium text-gray-900 mb-3">Data management</h3>
             <div className="space-y-2">
@@ -225,7 +225,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
                 <Trash2 className="h-4 w-4" />
                 <span>Clear saved users</span>
               </button>
-              
+
               <button
                 onClick={handleClearAll}
                 className="w-full flex items-center justify-center space-x-2 py-2 px-4 bg-red-50 text-red-700 border border-red-300 rounded-lg hover:bg-red-100"
@@ -236,7 +236,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
             </div>
           </div>
 
-          {/* Информация */}
+          {/* Information */}
           <div className="bg-gray-50 rounded-lg p-3">
             <h4 className="text-sm font-medium text-gray-900 mb-2">About the app</h4>
             <p className="text-xs text-gray-600">
@@ -248,7 +248,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
           </div>
         </div>
 
-        {/* Кнопки действий */}
+        {/* Action buttons */}
         <div className="p-4 border-t border-gray-200 sticky bottom-0 bg-white space-y-2">
           <button
             onClick={handleSave}
