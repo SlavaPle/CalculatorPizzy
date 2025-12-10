@@ -92,12 +92,7 @@ function App() {
               >
                 Start calculation
               </button>
-              <button
-                onClick={() => handleLogin({ id: 'demo', name: 'Demo user', minSlices: 1, canBeMore: false, personalSauces: [], totalCost: 0, assignedSlices: [] })}
-                className="w-full bg-gray-200 text-gray-800 py-3 px-6 rounded-lg font-medium"
-              >
-                Login to account
-              </button>
+
             </div>
           </div>
         ) : result ? (
