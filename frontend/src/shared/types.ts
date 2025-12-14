@@ -18,15 +18,6 @@ export interface PizzaSlice {
   userAssigned?: string; // ID пользователя, которому назначен кусок
 }
 
-export interface Sauce {
-  id: string;
-  type: string;
-  price: number;
-  size: SauceSize;
-  isPersonal: boolean; // true - персональный, false - общий
-  userId?: string; // ID пользователя для персонального соуса
-}
-
 export interface User {
   id: string;
   name: string;
@@ -34,7 +25,6 @@ export interface User {
   maxSlices: number;
   canBeMore: boolean; // можно больше кусков
   preferredTypes?: string[]; // предпочтения по типам пиццы
-  personalSauces: Sauce[];
   totalCost: number;
   assignedSlices: PizzaSlice[];
 }
@@ -43,7 +33,6 @@ export interface Order {
   id: string;
   users: User[];
   pizzas: Pizza[];
-  sharedSauces: Sauce[];
   totalCost: number;
   freePizzaCount: number;
   createdAt: Date;
@@ -58,13 +47,11 @@ export interface CalculationResult {
     [userId: string]: {
       slices: PizzaSlice[];
       cost: number;
-      sauces: Sauce[];
     };
   };
 }
 
 export type PizzaSize = 'small' | 'medium' | 'large' | 'xlarge';
-export type SauceSize = 'small' | 'medium' | 'large';
 
 export interface PizzaType {
   id: string;
@@ -73,19 +60,10 @@ export interface PizzaType {
   slices: { [K in PizzaSize]: number };
 }
 
-export interface SauceType {
-  id: string;
-  name: string;
-  price: { [K in SauceSize]: number };
-}
-
 export interface Settings {
   defaultPizzaTypes: PizzaType[];
-  defaultSauceTypes: SauceType[];
   freePizzaThreshold: number; // количество пицц для получения бесплатной
   freePizzaSize: PizzaSize;
   currency: string;
   language: 'ru' | 'en';
 }
-
-

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { X, Trash2, Save } from 'lucide-react'
-import NumericStepper from './NumericStepper'
-import { CalculationSchemeManager } from '../utils/calculationSchemes/CalculationSchemeManager'
+import NumericStepper from '../common/NumericStepper'
+import { CalculationSchemeManager } from '../../utils/calculationSchemes/CalculationSchemeManager'
 
 // Component for visualizing pizza with slices
 const PizzaVisualization = ({ slices, size, label }: { slices: number, size: 'small' | 'large', label: string }) => {

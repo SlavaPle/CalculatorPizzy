@@ -1,4 +1,4 @@
-import { User } from '../types'
+import { User } from '../../shared/types'
 import { ArrowLeft, Calculator, Users, Gift, CheckCircle } from 'lucide-react'
 
 interface PizzaCalculationProps {

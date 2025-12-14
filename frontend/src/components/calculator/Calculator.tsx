@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react'
-import { User } from '../types'
+import { useState } from 'react'
+import { User } from '../../shared/types'
 import { Plus, Users, Trash2, Calculator, Minus, Settings } from 'lucide-react'
 import SettingsModal, { PizzaSettings } from './SettingsModal'
-import { CalculationResultStore } from '../utils/CalculationResultStore'
+import PizzaVariantCard from './PizzaVariantCard'
+import { CalculationResultStore } from '../../utils/CalculationResultStore'
+import { bestFactors, createPizzaList, calculateDistribution } from '../../utils/calculations'
 
 interface CalculatorProps {
   users: User[]
@@ -74,7 +76,7 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
       minSlices: formData.slices,
       maxSlices: formData.slices,
       canBeMore: formData.canBeMore,
-      personalSauces: [],
+
       totalCost: 0,
       assignedSlices: []
     }
@@ -127,110 +129,22 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
     return Math.round(pizzaSettings.largePizzaPrice * pizzaSettings.smallPizzaPricePercent / 100)
   }
 
-  // Function for optimal pizza count selection
-  const bestFactors = (N: number, K: number, M: number, limit: number = 100): [number, number, number] => {
-    let best: [number, number, number] = [0, 0, Math.abs(N)]
-
-    for (let b = 0; b <= limit; b++) {
-      const a = Math.round((N - b * M) / K)
-      if (a < 0) continue;
-      const R = Math.abs(N - (a * K + b * M))
-      if (R < best[2]) {
-        best = [a, b, R]
-      }
-    }
-
-    return best
-  }
-
-  // Create pizza list
-  const createPizzaList = (count: number, useSmall: boolean = false) => {
-    const pizzas = []
+  // Wrapper for createPizzaList with current settings
+  const createPizzaListWithSettings = (count: number, useSmall: boolean = false) => {
     const slices = useSmall ? pizzaSettings.smallPizzaSlices : pizzaSettings.largePizzaSlices
     const price = useSmall ? getActualSmallPizzaPrice() : pizzaSettings.largePizzaPrice
+    const size = useSmall ? 'small' : 'large' as 'small' | 'large'
 
-    for (let i = 0; i < count; i++) {
-      const isFree = pizzaSettings.useFreePizza && (i + 1) % pizzaSettings.freePizzaThreshold === 0
-
-      // If pizza is free, use freePizzaIsSmall setting
-      let pizzaSlices = slices
-      let pizzaSize = useSmall ? 'small' : 'large'
-
-      if (isFree && pizzaSettings.freePizzaIsSmall) {
-        pizzaSlices = pizzaSettings.smallPizzaSlices
-        pizzaSize = 'small'
-      }
-
-      pizzas.push({
-        id: `pizza-${i}`,
-        slices: pizzaSlices,
-        price: price,
-        isFree: isFree,
-        size: pizzaSize
-      })
-    }
-    return pizzas
-  }
-
-  // Calculation function for selected option based on pizza list
-  const calculateDistribution = (pizzaList: any[]) => {
-    // Sum slices of all pizzas in the list (each may have different quantity)
-    const totalPizzaSlices = pizzaList.reduce((sum, pizza) => sum + pizza.slices, 0)
-    let pieces = totalPizzaSlices - totalMinSlices  // Extra slices (can be negative)
-    const distribution: { [key: string]: number } = {}
-
-    // Initialization - everyone gets minimum
-    users.forEach(user => {
-      distribution[user.id] = user.minSlices
-    })
-
-    // If not enough slices (pieces < 0), subtract in circular scheme
-    if (pieces < 0) {
-      let missing = Math.abs(pieces)
-
-      // Subtract using the same scheme as crossing out
-      // Full circles - subtract equally from everyone
-      const fullRounds = Math.floor(missing / users.length)
-      const remainder = missing % users.length
-
-      users.forEach((user, index) => {
-        let toSubtract = fullRounds
-        // Distribute remainder to first users
-        if (index < remainder) {
-          toSubtract++
-        }
-        toSubtract = Math.min(toSubtract, distribution[user.id])
-        distribution[user.id] -= toSubtract
-      })
-    }
-    // If there are extra slices, distribute them
-    else if (pieces > 0) {
-      // Distribute remaining slices in a circle
-      while (pieces > 0) {
-        let distributed = false
-
-        for (const user of users) {
-          if (pieces <= 0) break
-
-          if (user.canBeMore) {
-            // Add 1 slice
-            distribution[user.id]++
-            pieces--
-            distributed = true
-          }
-        }
-
-        // If failed to distribute to anyone, exit loop
-        if (!distributed) break
-      }
-    }
-
-    return {
-      distribution,
-      extraSlices: pieces,
-      totalSlices: Object.values(distribution).reduce((sum, val) => sum + val, 0),
-      pizzaList
-    }
+    return createPizzaList(
+      count,
+      slices,
+      price,
+      pizzaSettings.freePizzaThreshold,
+      pizzaSettings.useFreePizza,
+      pizzaSettings.freePizzaIsSmall,
+      pizzaSettings.smallPizzaSlices,
+      size
+    )
   }
 
   // On-the-fly calculation
@@ -240,74 +154,110 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
   // Step 1.1: Get total actual slices (for display)
   const totalActualSlices = users.reduce((sum, user) => sum + user.minSlices, 0)
 
-  // Step 2: Find nearest optimal pizza count (large)
-  const largePizzaCount = Math.ceil(totalMinSlices / pizzaSettings.largePizzaSlices)
-  const largePizzaList = createPizzaList(largePizzaCount, false)
+  // ========== CREATE THREE PIZZA LISTS FOR EACH VARIANT ==========
 
-  // Step 3: If small pizzas differ, perform additional calculation
-  const smallPizzaCount = Math.ceil(totalMinSlices / pizzaSettings.smallPizzaSlices)
-  const smallPizzaList = createPizzaList(smallPizzaCount, true)
-
-  // Step 4: Optimal combination of large and small pizzas
+  // VARIANT 1: Optimal combination (large + small)
   const [optimalLarge, optimalSmall, optimalRemainder] = bestFactors(
     totalMinSlices,
     pizzaSettings.largePizzaSlices,
     pizzaSettings.smallPizzaSlices
   )
 
-  // Determine whether to show option with optimal combination
-  const showOptimalOption = !pizzaSettings.smallEqual && optimalSmall > 0
+  // Create optimal pizza list
+  const optimalPizzaList = []
+  for (let i = 0; i < optimalLarge; i++) {
+    const isFree = pizzaSettings.useFreePizza && (i + 1) % pizzaSettings.freePizzaThreshold === 0
+    let pizzaSlices = pizzaSettings.largePizzaSlices
+    let pizzaSize: 'small' | 'large' = 'large'
 
-  // Main calculation (large pizzas or selected option)
-  let pizzaList = largePizzaList
+    if (isFree && pizzaSettings.freePizzaIsSmall) {
+      pizzaSlices = pizzaSettings.smallPizzaSlices
+      pizzaSize = 'small'
+    }
 
-  if (selectedVariant === 'small') {
-    pizzaList = smallPizzaList
+    optimalPizzaList.push({
+      id: `pizza-large-${i}`,
+      slices: pizzaSlices,
+      price: pizzaSettings.largePizzaPrice,
+      isFree: isFree,
+      size: pizzaSize
+    })
   }
 
-  // Step 4: Now distribute slices per person based on pizzaList
-  const currentCalc = calculateDistribution(pizzaList)
-  const actualSlices = currentCalc.distribution
+  for (let i = 0; i < optimalSmall; i++) {
+    const globalIndex = optimalLarge + i
+    const isFree = pizzaSettings.useFreePizza && (globalIndex + 1) % pizzaSettings.freePizzaThreshold === 0
 
-  // Calculate extra slices for large pizzas (needed for "-1 pizza" button display)
-  const largeExtraSlices = (largePizzaCount * pizzaSettings.largePizzaSlices) - totalActualSlices
+    optimalPizzaList.push({
+      id: `pizza-small-${i}`,
+      slices: pizzaSettings.smallPizzaSlices,
+      price: getActualSmallPizzaPrice(),
+      isFree: isFree,
+      size: 'small' as 'small' | 'large'
+    })
+  }
 
-  // Alternative calculation (if extra slices removed) - only for large
+  // VARIANT 2: Large pizzas only
+  const largePizzaCount = Math.ceil(totalMinSlices / pizzaSettings.largePizzaSlices)
+  const largePizzaList = createPizzaListWithSettings(largePizzaCount, false)
+
+  // VARIANT 3: Reduced (-1 pizza)
   const altPizzaCount = largePizzaCount - 1
-  const altPizzaList = createPizzaList(altPizzaCount, false)
-  const altCalc = calculateDistribution(altPizzaList)
+  const altPizzaList = createPizzaListWithSettings(altPizzaCount, false)
+
+  // ========== CALCULATE DISTRIBUTIONS FOR EACH VARIANT ==========
+
+  const optimalCalc = calculateDistribution(optimalPizzaList, users)
+  const largeCalc = calculateDistribution(largePizzaList, users)
+  const altCalc = calculateDistribution(altPizzaList, users)
+
+  // ========== DETERMINE WHICH VARIANTS TO SHOW ==========
+
+  const showOptimalOption = !pizzaSettings.smallEqual && optimalSmall > 0
   const altMissingSlices = altCalc.extraSlices < 0 ? Math.abs(altCalc.extraSlices) : 0
 
-  // Count active options for positioning
-  const hasOptimal = showOptimalOption
+  // Check if Optimal is identical to Large (same pizza composition)
+  const optimalLargeCount = optimalPizzaList.filter(p => p.size === 'large').length
+  const optimalSmallCount = optimalPizzaList.filter(p => p.size === 'small').length
+  const largeLargeCount = largePizzaList.filter(p => p.size === 'large').length
+  const largeSmallCount = largePizzaList.filter(p => p.size === 'small').length
+
+  const isOptimalSameAsLarge = optimalLargeCount === largeLargeCount && optimalSmallCount === largeSmallCount
+
+  // Check if Reduced is identical to Large
+  const altLargeCount = altPizzaList.filter(p => p.size === 'large').length
+  const altSmallCount = altPizzaList.filter(p => p.size === 'small').length
+
+  const isReducedSameAsLarge = altLargeCount === largeLargeCount && altSmallCount === largeSmallCount
+
+  const hasOptimal = showOptimalOption && !isOptimalSameAsLarge
   const hasLarge = true // Large pizzas always shown
-  const hasReduced = altMissingSlices > 0 && altMissingSlices <= Math.floor(pizzaSettings.largePizzaSlices / 4) && altPizzaCount > 0
+  const hasReduced = altMissingSlices > 0 && altMissingSlices <= Math.floor(pizzaSettings.largePizzaSlices / 4) && altPizzaCount > 0 && !isReducedSameAsLarge
 
   const activeVariants = [hasOptimal, hasLarge, hasReduced].filter(Boolean).length
 
-  // Automatically select single available option
-  useEffect(() => {
-    if (activeVariants === 1) {
-      if (hasOptimal) {
-        setSelectedVariant('small')
-      } else if (hasLarge) {
-        setSelectedVariant('current')
-      } else if (hasReduced) {
-        setSelectedVariant('reduced')
-      }
-    }
-  }, [activeVariants, hasOptimal, hasLarge, hasReduced])
+  // ========== SELECT ACTIVE PIZZA LIST AND DISTRIBUTION ==========
 
-  // If alternative option selected, use it
-  if (selectedVariant === 'reduced') {
-    Object.assign(actualSlices, altCalc.distribution)
+  let activePizzaList = largePizzaList
+  let activeDistribution = largeCalc.distribution
+
+  if (selectedVariant === 'small') {
+    activePizzaList = optimalPizzaList
+    activeDistribution = optimalCalc.distribution
+  } else if (selectedVariant === 'reduced') {
+    activePizzaList = altPizzaList
+    activeDistribution = altCalc.distribution
   }
 
-  // Calculate extra slices for each option
-  const currentCalcForExtra = calculateDistribution(largePizzaList)
+  // Calculate extra slices for display (total slices in list - required slices)
+  const largeTotalSlices = largePizzaList.reduce((sum, p) => sum + p.slices, 0)
+  const largeExtraSlices = largeTotalSlices - totalActualSlices
 
-  const currentExtraSlicesForUsers = Object.values(currentCalcForExtra.distribution).reduce((sum, slices) => sum + slices, 0) - totalActualSlices
+  const currentExtraSlicesForUsers = Object.values(largeCalc.distribution).reduce((sum, slices) => sum + slices, 0) - totalActualSlices
   const reducedExtraSlicesForUsers = Object.values(altCalc.distribution).reduce((sum, slices) => sum + slices, 0) - totalMinSlices
+
+  // For crossing out visualization
+  const currentCalcForExtra = largeCalc
 
 
   const filteredSuggestions = savedUsers.filter(name =>
@@ -335,7 +285,7 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
                   // Calculate actualSlices dynamically based on selected option
                   let userActualSlices = user.minSlices
                   if (selectedVariant === 'reduced') {
-                    const altCalc = calculateDistribution(createPizzaList(largePizzaCount - 1, false))
+                    const altCalc = calculateDistribution(createPizzaListWithSettings(largePizzaCount - 1, false), users)
                     userActualSlices = altCalc.distribution[user.id] || user.minSlices
                   } else if (selectedVariant === 'small') {
                     const [optimalLarge, optimalSmall] = bestFactors(
@@ -351,11 +301,11 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
                     for (let i = 0; i < optimalSmall; i++) {
                       optimalPizzaList.push({ slices: pizzaSettings.smallPizzaSlices, price: getActualSmallPizzaPrice(), isFree: false })
                     }
-                    const optimalCalc = calculateDistribution(optimalPizzaList)
+                    const optimalCalc = calculateDistribution(optimalPizzaList, users)
                     userActualSlices = optimalCalc.distribution[user.id] || user.minSlices
                   } else {
                     // Regular calculation (large pizzas)
-                    userActualSlices = actualSlices[user.id] || user.minSlices
+                    userActualSlices = activeDistribution[user.id] || user.minSlices
                   }
 
                   const gotExtra = userActualSlices > userRequiredSlices
@@ -628,67 +578,28 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
 
       {/* Fixed bottom panel with calculation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-        <div className="mx-auto px-4 py-3" style={{ maxWidth: '800px' }}>
+        <div className="mx-auto px-4 py-3" style={{ maxWidth: '50rem' }}>
           {/* Calculation */}
           {users.length > 0 && (
             <div className="mb-3">
-              <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 min-h-[200px]">
+              <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 min-h-[12.5rem]">
 
                 {showOptimalOption || (altMissingSlices > 0 && altMissingSlices <= Math.floor(pizzaSettings.largePizzaSlices / 4)) ? (
                   // Calculation options (clickable) - fixed grid 9 fields
                   <div className="grid grid-cols-9 gap-1">
-                    {/* Option 1: Optimal combination (if different from regular large) - ALWAYS LEFT */}
+                    {/* Option 1: Optimal combination */}
                     {hasOptimal && (
                       <div className={`${activeVariants === 3 ? 'col-span-3' : activeVariants === 2 ? 'col-span-4' : 'col-span-5'}`}>
-                        <button
+                        <PizzaVariantCard
+                          title="Optimal combination"
+                          pizzaCount={optimalLarge === 0 ? optimalSmall : optimalSmall === 0 ? optimalLarge : `${optimalLarge} (${optimalSmall})`}
+                          pizzaLabel={optimalLarge === 0 ? 'Small pizzas' : optimalSmall === 0 ? 'Large pizzas' : 'Large (small) pizzas'}
+                          requiredSlices={totalMinSlices}
+                          extraSlices={optimalRemainder}
+                          totalSlices={totalMinSlices + optimalRemainder}
+                          isSelected={selectedVariant === 'small'}
                           onClick={() => setSelectedVariant('small')}
-                          className={`border-2 rounded-lg p-3 transition-all w-full h-full ${selectedVariant === 'small'
-                            ? 'border-pizza-500 bg-pizza-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                            }`}
-                        >
-                          <div className="text-xs text-gray-600 mb-2 text-center font-medium">Optimal combination</div>
-                          <div className="space-y-2">
-                            <div className="text-center">
-                              <div className="text-base sm:text-xl font-bold text-gray-900">
-                                {optimalLarge === 0 ? optimalSmall :
-                                  optimalSmall === 0 ? optimalLarge :
-                                    `${optimalLarge} (${optimalSmall})`}
-                              </div>
-                              <div className="text-xs text-gray-600">
-                                {optimalLarge === 0 ? 'Small pizzas' :
-                                  optimalSmall === 0 ? 'Large pizzas' :
-                                    'Large (small) pizzas'}
-                              </div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-sm sm:text-lg font-bold text-blue-600">
-                                {totalMinSlices}
-                                {optimalRemainder !== 0 && (
-                                  <span className="text-gray-500 font-normal"> {optimalRemainder > 0 ? '+' : ''}</span>
-                                )}
-                                {optimalRemainder !== 0 && (
-                                  <span className={`font-bold ${optimalRemainder > 0 ? 'text-green-600' : 'text-red-600'}`}>{optimalRemainder}</span>
-                                )}
-                                {optimalRemainder !== 0 && (
-                                  <span className="text-gray-500 font-normal"> = </span>
-                                )}
-                                {optimalRemainder !== 0 && (
-                                  <span className="text-blue-600 font-bold">{totalMinSlices + optimalRemainder}</span>
-                                )}
-                              </div>
-                              <div className="text-xs text-gray-600">Ordered slices</div>
-                            </div>
-                            <div className="text-center">
-                              <div className={`text-sm font-bold ${optimalRemainder !== 0 ? (optimalRemainder > 0 ? 'text-green-600' : 'text-red-600') : 'text-gray-400'}`}>
-                                {Math.abs(optimalRemainder)}
-                              </div>
-                              <div className={`text-xs ${optimalRemainder !== 0 ? (optimalRemainder > 0 ? 'text-green-800' : 'text-red-800') : 'text-gray-400'}`}>
-                                {optimalRemainder > 0 ? 'Extra' : optimalRemainder < 0 ? 'Missing' : 'Extra'}
-                              </div>
-                            </div>
-                          </div>
-                        </button>
+                        />
                       </div>
                     )}
 
@@ -699,109 +610,39 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
 
                     {/* Option 2: Large pizzas */}
                     <div className={`${activeVariants === 3 ? 'col-span-3' : activeVariants === 2 ? 'col-span-4' : 'col-span-5'}`}>
-                      <button
+                      <PizzaVariantCard
+                        title={activeVariants === 1 ? '' : 'Large'}
+                        pizzaCount={largePizzaList.some(p => p.size === 'small')
+                          ? `${largePizzaList.filter(p => p.size === 'large').length} (${largePizzaList.filter(p => p.size === 'small').length})`
+                          : largePizzaCount}
+                        pizzaLabel={largePizzaList.some(p => p.size === 'small') ? 'Large (small) pizzas' : 'Pizzas'}
+                        requiredSlices={totalActualSlices}
+                        extraSlices={largeExtraSlices}
+                        totalSlices={totalActualSlices + largeExtraSlices}
+                        isSelected={selectedVariant === 'current'}
                         onClick={() => setSelectedVariant('current')}
-                        className={`border-2 rounded-lg p-3 transition-all w-full h-full ${selectedVariant === 'current'
-                          ? 'border-pizza-500 bg-pizza-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                      >
-                        <div className="text-xs text-gray-600 mb-2 text-center font-medium">Large</div>
-                        <div className="space-y-2">
-                          <div className="text-center">
-                            <div className="text-base sm:text-xl font-bold text-gray-900">{largePizzaCount}</div>
-                            <div className="text-xs text-gray-600">Pizzas</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-sm sm:text-lg font-bold text-blue-600">
-                              {totalActualSlices}
-                              {largeExtraSlices !== 0 && (
-                                <span className="text-gray-500 font-normal"> {largeExtraSlices > 0 ? '+' : ''}</span>
-                              )}
-                              {largeExtraSlices !== 0 && (
-                                <span className={`font-bold ${largeExtraSlices > 0 ? 'text-green-600' : 'text-red-600'}`}>{largeExtraSlices}</span>
-                              )}
-                              {largeExtraSlices !== 0 && (
-                                <span className="text-gray-500 font-normal"> = </span>
-                              )}
-                              {largeExtraSlices !== 0 && (
-                                <span className="text-blue-600 font-bold">{totalActualSlices + largeExtraSlices}</span>
-                              )}
-                            </div>
-                            <div className="text-xs text-gray-600">Ordered slices</div>
-                          </div>
-                          <div className="text-center">
-                            <div className={`text-sm font-bold ${largeExtraSlices !== 0 ? (largeExtraSlices > 0 ? 'text-green-600' : 'text-red-600') : 'text-gray-400'}`}>
-                              {Math.abs(largeExtraSlices)}
-                            </div>
-                            <div className={`text-xs ${largeExtraSlices !== 0 ? (largeExtraSlices > 0 ? 'text-green-800' : 'text-red-800') : 'text-gray-400'}`}>
-                              {largeExtraSlices > 0 ? 'Extra' : largeExtraSlices < 0 ? 'Missing' : 'Extra'}
-                            </div>
-                          </div>
-                        </div>
-                      </button>
+                      />
                     </div>
 
                     {/* Empty spaces for centering after large pizzas */}
                     {activeVariants === 1 && hasLarge && <div></div>}
                     {activeVariants === 1 && hasLarge && <div></div>}
 
-                    {/* Option 3: Remove extra (if -1 pizza not enough 1/4 pizza and result > 0) */}
+                    {/* Option 3: Remove extra (-1 pizza) */}
                     {hasReduced && (
                       <div className={`${activeVariants === 3 ? 'col-span-3' : activeVariants === 2 ? 'col-span-4' : 'col-span-5'}`}>
-                        <button
+                        <PizzaVariantCard
+                          title="-1 pizza"
+                          pizzaCount={altPizzaList.some(p => p.size === 'small')
+                            ? `${altPizzaList.filter(p => p.size === 'large').length} (${altPizzaList.filter(p => p.size === 'small').length})`
+                            : altPizzaCount}
+                          pizzaLabel={altPizzaList.some(p => p.size === 'small') ? 'Large (small) pizzas' : 'Pizzas'}
+                          requiredSlices={totalMinSlices}
+                          extraSlices={reducedExtraSlicesForUsers > 0 ? reducedExtraSlicesForUsers : -altMissingSlices}
+                          totalSlices={reducedExtraSlicesForUsers > 0 ? totalMinSlices + reducedExtraSlicesForUsers : totalMinSlices - altMissingSlices}
+                          isSelected={selectedVariant === 'reduced'}
                           onClick={() => setSelectedVariant('reduced')}
-                          className={`border-2 rounded-lg p-3 transition-all w-full h-full ${selectedVariant === 'reduced'
-                            ? 'border-pizza-500 bg-pizza-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                            }`}
-                        >
-                          <div className="text-xs text-gray-600 mb-2 text-center font-medium">-1 pizza</div>
-                          <div className="space-y-2">
-                            <div className="text-center">
-                              <div className="text-base sm:text-xl font-bold text-gray-900">{altPizzaCount}</div>
-                              <div className="text-xs text-gray-600">Pizzas</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-sm sm:text-lg font-bold text-blue-600">
-                                {totalMinSlices}
-                                {reducedExtraSlicesForUsers > 0 && (
-                                  <span className="text-gray-500 font-normal"> +</span>
-                                )}
-                                {reducedExtraSlicesForUsers > 0 && (
-                                  <span className="text-green-600 font-bold">{reducedExtraSlicesForUsers}</span>
-                                )}
-                                {reducedExtraSlicesForUsers > 0 && (
-                                  <span className="text-gray-500 font-normal"> = </span>
-                                )}
-                                {reducedExtraSlicesForUsers > 0 && (
-                                  <span className="text-blue-600 font-bold">{totalMinSlices + reducedExtraSlicesForUsers}</span>
-                                )}
-                                {altMissingSlices > 0 && (
-                                  <span className="text-gray-500 font-normal"> -</span>
-                                )}
-                                {altMissingSlices > 0 && (
-                                  <span className="text-red-600 font-bold">{altMissingSlices}</span>
-                                )}
-                                {altMissingSlices > 0 && (
-                                  <span className="text-gray-500 font-normal"> = </span>
-                                )}
-                                {altMissingSlices > 0 && (
-                                  <span className="text-blue-600 font-bold">{totalMinSlices - altMissingSlices}</span>
-                                )}
-                              </div>
-                              <div className="text-xs text-gray-600">Ordered slices</div>
-                            </div>
-                            <div className="text-center">
-                              <div className={`text-sm font-bold ${reducedExtraSlicesForUsers > 0 ? 'text-green-600' : altMissingSlices > 0 ? 'text-red-600' : 'text-gray-400'}`}>
-                                {reducedExtraSlicesForUsers > 0 ? reducedExtraSlicesForUsers : altMissingSlices > 0 ? altMissingSlices : 0}
-                              </div>
-                              <div className={`text-xs ${reducedExtraSlicesForUsers > 0 ? 'text-green-800' : altMissingSlices > 0 ? 'text-red-800' : 'text-gray-400'}`}>
-                                {reducedExtraSlicesForUsers > 0 ? 'Extra' : altMissingSlices > 0 ? 'Missing' : 'Extra'}
-                              </div>
-                            </div>
-                          </div>
-                        </button>
+                        />
                       </div>
                     )}
                   </div>
@@ -814,7 +655,7 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
 
                     {/* Main block - 5 fields center */}
                     <div className="col-span-5">
-                      <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 min-h-[200px]">
+                      <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 min-h-[12.5rem]">
                         <div className="space-y-4">
                           <div className="text-center">
                             <div className="sm:text-lg font-bold text-gray-900">{largePizzaCount}</div>
@@ -865,16 +706,13 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
               <button
                 onClick={() => {
                   // Determine correct pizza list based on variant
-                  let finalPizzaList = pizzaList
-                  if (selectedVariant === 'reduced') {
-                    finalPizzaList = altPizzaList
-                  }
+                  const finalPizzaList = activePizzaList
 
                   // Form data for Results
                   const calculationData = {
                     selectedVariant,
                     pizzaList: finalPizzaList,
-                    userSlicesDistribution: actualSlices,
+                    userSlicesDistribution: activeDistribution,
                     pizzaSettings,
                   }
 

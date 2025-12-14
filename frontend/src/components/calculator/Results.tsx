@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
-import { User } from '../types'
+import { User } from '../../shared/types'
 import { ArrowLeft, RotateCcw, Users } from 'lucide-react'
-import { CalculationResultStore } from '../utils/CalculationResultStore'
+import { CalculationResultStore } from '../../utils/CalculationResultStore'
 
 interface ResultsProps {
   result: any
@@ -128,7 +128,7 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
         </div>
 
         {pricePerSlice > 0 && (
-          <div className="text-right pl-4 border-l border-gray-200 min-w-[120px]">
+          <div className="text-right pl-4 border-l border-gray-200 min-w-[7.5rem]">
             <div className="text-gray-600 text-sm mb-1 whitespace-nowrap">Price per slice</div>
             <div className="text-2xl font-bold text-pizza-600">
               {formatCurrency(pricePerSlice)}

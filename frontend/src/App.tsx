@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { User } from './types'
-import Header from './components/Header'
-import CalculatorComponent from './components/Calculator'
-import Results from './components/Results'
+import { User } from './shared/types'
+import Header from './components/common/Header'
+import CalculatorComponent from './components/calculator/Calculator'
+import Results from './components/calculator/Results'
 
 import { CalculationResultStore } from './utils/CalculationResultStore'
 
@@ -62,7 +62,7 @@ function App() {
         isGuest={isGuest}
       />
 
-      <main className="mx-auto px-4 py-4" style={{ maxWidth: '800px' }}>
+      <main className="mx-auto px-4 py-4" style={{ maxWidth: '50rem' }}>
         {!currentUser && !isGuest ? (
           <div className="text-center py-16">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">

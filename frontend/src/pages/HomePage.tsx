@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { User } from '../types'
+import { User } from '../shared/types'
 import { Pizza, Calculator, Users, ArrowRight } from 'lucide-react'
 
 interface HomePageProps {
@@ -92,7 +92,7 @@ const HomePage = ({ onLogin: _onLogin, onGuestMode }: HomePageProps) => {
         <div className="grid md:grid-cols-4 gap-8">
           {[
             "Add participants and their preferences",
-            "Choose pizza types and sauces",
+            "Choose pizza types",
             "System calculates optimal quantity",
             "Get detailed cost calculation"
           ].map((step, index) => (

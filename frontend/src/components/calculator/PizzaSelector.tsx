@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { PizzaType } from '../types'
+import { PizzaType } from '../../shared/types'
 import { Plus, Trash2 } from 'lucide-react'
 
 interface PizzaSelectorProps {

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { User } from '../types'
+import { User } from '../shared/types'
 import { Pizza, ArrowLeft, User as UserIcon, Eye, EyeOff } from 'lucide-react'
 
 interface AuthPageProps {
@@ -60,7 +60,7 @@ const AuthPage = ({ onLogin, onGuestMode }: AuthPageProps) => {
       minSlices: 1,
       maxSlices: 1,
       canBeMore: false,
-      personalSauces: [],
+
       totalCost: 0,
       assignedSlices: []
     }

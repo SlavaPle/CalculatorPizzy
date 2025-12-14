@@ -39,7 +39,7 @@
   }
 
   /* Mobile optimizations */
-  @media (max-width: 640px) {
+  @media (max-width: 40rem) {
     .container {
       @apply px-3;
     }

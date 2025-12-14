@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { User, PizzaType, SauceType } from '../types'
+import { User, PizzaType } from '../shared/types'
 // import { UserManager, SauceManager, PizzaCalculator } from '../../shared/classes'
-import UserForm from '../components/UserForm'
-import PizzaSelector from '../components/PizzaSelector'
-import SauceSelector from '../components/SauceSelector'
-import CalculationResults from '../components/CalculationResults'
-import { Plus, Users, Pizza, Utensils } from 'lucide-react'
+import UserForm from '../components/calculator/UserForm'
+import PizzaSelector from '../components/calculator/PizzaSelector'
+
+import CalculationResults from '../components/calculator/CalculationResults'
+import { Plus, Users, Pizza } from 'lucide-react'
 
 interface CalculatorPageProps {
   currentUser: User | null
@@ -15,9 +15,9 @@ interface CalculatorPageProps {
 const CalculatorPage = ({ currentUser: _currentUser, isGuest: _isGuest }: CalculatorPageProps) => {
   const [users, setUsers] = useState<User[]>([])
   const [selectedPizzas, setSelectedPizzas] = useState<PizzaType[]>([])
-  const [selectedSauces, setSelectedSauces] = useState<SauceType[]>([])
+
   const [calculationResult, setCalculationResult] = useState<any>(null)
-  const [activeTab, setActiveTab] = useState<'users' | 'pizzas' | 'sauces' | 'results'>('users')
+  const [activeTab, setActiveTab] = useState<'users' | 'pizzas' | 'results'>('users')
 
   const handleAddUser = (userData: { name: string; minSlices: number; maxSlices: number; preferredTypes?: string[] }) => {
     const newUser: User = {
@@ -27,7 +27,7 @@ const CalculatorPage = ({ currentUser: _currentUser, isGuest: _isGuest }: Calcul
       maxSlices: userData.maxSlices,
       canBeMore: false,
       preferredTypes: userData.preferredTypes,
-      personalSauces: [],
+
       totalCost: 0,
       assignedSlices: []
     }
@@ -73,7 +73,7 @@ const CalculatorPage = ({ currentUser: _currentUser, isGuest: _isGuest }: Calcul
   const tabs = [
     { id: 'users', label: 'Participants', icon: <Users className="h-5 w-5" />, count: users.length },
     { id: 'pizzas', label: 'Pizzas', icon: <Pizza className="h-5 w-5" />, count: selectedPizzas.length },
-    { id: 'sauces', label: 'Sauces', icon: <Utensils className="h-5 w-5" />, count: selectedSauces.length },
+
     { id: 'results', label: 'Result', icon: <Plus className="h-5 w-5" />, count: calculationResult ? 1 : 0 }
   ]
 
@@ -169,17 +169,7 @@ const CalculatorPage = ({ currentUser: _currentUser, isGuest: _isGuest }: Calcul
           </div>
         )}
 
-        {activeTab === 'sauces' && (
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
-              Sauce selection
-            </h2>
-            <SauceSelector
-              selectedSauces={selectedSauces}
-              onSaucesChange={setSelectedSauces}
-            />
-          </div>
-        )}
+
 
         {activeTab === 'results' && (
           <div>

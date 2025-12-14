@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CalculationResult } from '../types'
+import { CalculationResult } from '../../shared/types'
 import { Users, Pizza, DollarSign, Download, Share2 } from 'lucide-react'
 
 interface CalculationResultsProps {
@@ -176,7 +176,7 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
                     </div>
                   </div>
                   <div className="text-sm text-gray-600">
-                    Slices: {userData.slices.length} • Sauces: {userData.sauces.length}
+                    Slices: {userData.slices.length}
                   </div>
                 </div>
               ))}
