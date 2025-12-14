@@ -88,10 +88,10 @@ const PizzaSelector = ({ selectedPizzas, onPizzasChange }: PizzaSelectorProps) =
                 <h4 className="font-medium text-gray-900">{pizza.name}</h4>
                 <button
                   onClick={() => handleAddPizza(pizza)}
-                  className="btn-primary text-sm py-1 px-3"
+                  className="btn-primary p-3"
                   disabled={selectedPizzas.some(p => p.id === pizza.id)}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-5 w-5" />
                 </button>
               </div>
 
@@ -230,9 +230,9 @@ const PizzaSelector = ({ selectedPizzas, onPizzasChange }: PizzaSelectorProps) =
                 </div>
                 <button
                   onClick={() => handleRemovePizza(pizza.id)}
-                  className="text-red-600 hover:text-red-800"
+                  className="text-red-600 hover:text-red-800 p-3"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-5 w-5" />
                 </button>
               </div>
             ))}

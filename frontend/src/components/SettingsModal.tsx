@@ -105,7 +105,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
           <h2 className="text-xl font-bold text-gray-900">Settings</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 p-2"
           >
             <X className="h-6 w-6" />
           </button>
@@ -185,7 +185,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
                     type="checkbox"
                     checked={localSettings.useFreePizza}
                     onChange={(e) => setLocalSettings({ ...localSettings, useFreePizza: e.target.checked })}
-                    className="h-4 w-4 text-pizza-600 focus:ring-pizza-500 border-gray-300 rounded"
+                    className="h-5 w-5 sm:h-6 sm:w-6 text-pizza-600 focus:ring-pizza-500 border-gray-300 rounded"
                   />
                   <span className="text-sm font-medium text-gray-700">Free pizza on order</span>
                 </label>
@@ -204,7 +204,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
                         type="checkbox"
                         checked={localSettings.freePizzaIsSmall}
                         onChange={(e) => setLocalSettings({ ...localSettings, freePizzaIsSmall: e.target.checked })}
-                        className="h-4 w-4 text-pizza-600 focus:ring-pizza-500 border-gray-300 rounded"
+                        className="h-5 w-5 sm:h-6 sm:w-6 text-pizza-600 focus:ring-pizza-500 border-gray-300 rounded"
                       />
                       <span className="text-sm text-gray-700">Small pizza (otherwise large)</span>
                     </label>
@@ -222,7 +222,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
                 onClick={handleClearSavedUsers}
                 className="w-full flex items-center justify-center space-x-2 py-2 px-4 bg-yellow-50 text-yellow-700 border border-yellow-300 rounded-lg hover:bg-yellow-100"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-5 w-5" />
                 <span>Clear saved users</span>
               </button>
 
@@ -230,7 +230,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
                 onClick={handleClearAll}
                 className="w-full flex items-center justify-center space-x-2 py-2 px-4 bg-red-50 text-red-700 border border-red-300 rounded-lg hover:bg-red-100"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-5 w-5" />
                 <span>Clear all data</span>
               </button>
             </div>
@@ -254,7 +254,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
             onClick={handleSave}
             className="w-full bg-pizza-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-pizza-700 flex items-center justify-center space-x-2"
           >
-            <Save className="h-4 w-4" />
+            <Save className="h-5 w-5" />
             <span>Save settings</span>
           </button>
           <button

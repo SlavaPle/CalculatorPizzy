@@ -10,11 +10,11 @@ interface NumericStepperProps {
   className?: string
 }
 
-const NumericStepper = ({ 
-  value, 
-  onChange, 
-  min = 1, 
-  max = 100, 
+const NumericStepper = ({
+  value,
+  onChange,
+  min = 1,
+  max = 100,
   step = 1,
   label,
   className = ''
@@ -36,33 +36,31 @@ const NumericStepper = ({
           {label}
         </label>
       )}
-      <div className="flex items-center gap-1 sm:gap-2">
+      <div className="flex items-center gap-2 sm:gap-3">
         <button
           onClick={handleDecrement}
           disabled={value <= min}
-          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
-            value <= min 
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+          className={`w-10 h-10 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${value <= min
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
               : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-          }`}
+            }`}
         >
-          <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
+          <Minus className="h-5 w-5 sm:h-5 sm:w-5" />
         </button>
-        
-        <span className="w-6 sm:w-8 text-center font-medium text-sm text-gray-900">
+
+        <span className="w-8 sm:w-10 text-center font-medium text-base sm:text-lg text-gray-900">
           {value}
         </span>
-        
+
         <button
           onClick={handleIncrement}
           disabled={value >= max}
-          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
-            value >= max 
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+          className={`w-10 h-10 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${value >= max
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
               : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-          }`}
+            }`}
         >
-          <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+          <Plus className="h-5 w-5 sm:h-5 sm:w-5" />
         </button>
       </div>
     </div>

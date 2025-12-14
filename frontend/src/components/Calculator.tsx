@@ -375,31 +375,31 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
                           </div>
 
                           {/* +/- buttons */}
-                          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                             <button
                               onClick={() => handleUpdateUserSlices(user.id, -1)}
                               disabled={user.minSlices <= 1}
                               title="Decrease slices"
-                              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${user.minSlices <= 1
+                              className={`w-10 h-10 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${user.minSlices <= 1
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                 : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                                 }`}
                             >
-                              <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
+                              <Minus className="h-5 w-5 sm:h-5 sm:w-5" />
                             </button>
-                            <span className="w-6 sm:w-8 text-center font-medium text-sm text-gray-900">
+                            <span className="w-8 sm:w-10 text-center font-medium text-base sm:text-lg text-gray-900">
                               {userRequiredSlices}
                             </span>
                             <button
                               onClick={() => handleUpdateUserSlices(user.id, 1)}
                               disabled={user.minSlices >= 20}
                               title="Increase slices"
-                              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${user.minSlices >= 20
+                              className={`w-10 h-10 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${user.minSlices >= 20
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                 : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                                 }`}
                             >
-                              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                              <Plus className="h-5 w-5 sm:h-5 sm:w-5" />
                             </button>
                           </div>
 
@@ -409,16 +409,16 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
                               type="checkbox"
                               checked={user.canBeMore}
                               onChange={() => handleToggleCanBeMore(user.id)}
-                              className="rounded border-gray-300 text-pizza-600 focus:ring-pizza-500 w-4 h-4 sm:w-5 sm:h-5"
+                              className="rounded border-gray-300 text-pizza-600 focus:ring-pizza-500 w-5 h-5 sm:w-6 sm:h-6"
                             />
                           </label>
 
                           {/* Delete button */}
                           <button
                             onClick={() => handleRemoveUser(user.id)}
-                            className="text-red-600 hover:text-red-800 p-1 flex-shrink-0"
+                            className="text-red-600 hover:text-red-800 p-3 flex-shrink-0"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-5 w-5" />
                           </button>
                         </div>
                       </div>
@@ -576,29 +576,29 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
                 </div>
 
                 {/* +/- buttons */}
-                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                   <button
                     onClick={() => setFormData({ ...formData, slices: Math.max(1, formData.slices - 1) })}
                     disabled={formData.slices <= 1}
                     title="Decrease slices"
-                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${formData.slices <= 1
+                    className={`w-10 h-10 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${formData.slices <= 1
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                       : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                       }`}
                   >
-                    <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <Minus className="h-5 w-5 sm:h-5 sm:w-5" />
                   </button>
-                  <span className="w-6 sm:w-8 text-center font-medium text-sm text-gray-900">{formData.slices}</span>
+                  <span className="w-8 sm:w-10 text-center font-medium text-base sm:text-lg text-gray-900">{formData.slices}</span>
                   <button
                     onClick={() => setFormData({ ...formData, slices: Math.min(20, formData.slices + 1) })}
                     disabled={formData.slices >= 20}
                     title="Increase slices"
-                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${formData.slices >= 20
+                    className={`w-10 h-10 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${formData.slices >= 20
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                       : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                       }`}
                   >
-                    <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <Plus className="h-5 w-5 sm:h-5 sm:w-5" />
                   </button>
                 </div>
 
@@ -608,16 +608,16 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
                     type="checkbox"
                     checked={formData.canBeMore}
                     onChange={(e) => setFormData({ ...formData, canBeMore: e.target.checked })}
-                    className="rounded border-gray-300 text-pizza-600 focus:ring-pizza-500 w-4 h-4 sm:w-5 sm:h-5"
+                    className="rounded border-gray-300 text-pizza-600 focus:ring-pizza-500 w-5 h-5 sm:w-6 sm:h-6"
                   />
                 </label>
 
                 {/* Add button */}
                 <button
                   onClick={handleAddUser}
-                  className="bg-pizza-600 text-white p-1.5 sm:p-2 rounded-md hover:bg-pizza-700 flex-shrink-0"
+                  className="bg-pizza-600 text-white p-3 sm:p-3 rounded-md hover:bg-pizza-700 flex-shrink-0"
                 >
-                  <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <Plus className="h-5 w-5 sm:h-6 sm:w-6" />
                 </button>
               </div>
             </div>
