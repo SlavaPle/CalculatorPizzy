@@ -3,6 +3,7 @@ import { User } from './shared/types'
 import Header from './components/common/Header'
 import CalculatorComponent from './components/calculator/Calculator'
 import Results from './components/calculator/Results'
+import HelpPage from './pages/HelpPage'
 
 import { CalculationResultStore } from './utils/CalculationResultStore'
 
@@ -11,10 +12,13 @@ function App() {
   const [isGuest, setIsGuest] = useState(false)
   const [users, setUsers] = useState<User[]>([])
   const [result, setResult] = useState<any>(null)
+  const [isHelpOpen, setIsHelpOpen] = useState(false)
 
   const handleGuestMode = () => {
     setCurrentUser(null)
     setIsGuest(true)
+    setResult(null)
+    setUsers([])
   }
 
   const handleShowResults = (calculationData: any) => {
@@ -55,15 +59,35 @@ function App() {
     setResult(result)
   }
 
+  const handleOpenHelp = () => {
+    setIsHelpOpen(true)
+  }
+
+  const handleCloseHelp = () => {
+    setIsHelpOpen(false)
+  }
+
+  const handleStartFromHelp = () => {
+    // Krótkie przejście do kalkulatora jako gość
+    handleGuestMode()
+    setIsHelpOpen(false)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
         currentUser={currentUser}
         isGuest={isGuest}
+        onHelpClick={handleOpenHelp}
       />
 
       <main className="mx-auto px-4 py-4" style={{ maxWidth: '50rem' }}>
-        {!currentUser && !isGuest ? (
+        {isHelpOpen ? (
+          <HelpPage
+            onClose={handleCloseHelp}
+            onStartCalculation={handleStartFromHelp}
+          />
+        ) : !currentUser && !isGuest ? (
           <div className="text-center py-16">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
               🍕 PizzaCalk
