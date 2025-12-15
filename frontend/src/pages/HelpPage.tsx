@@ -1,4 +1,4 @@
-import { HelpCircle, ListChecks, Mail, ArrowRight, Home } from 'lucide-react'
+import { HelpCircle, ListChecks, ArrowRight, Home, DollarSign } from 'lucide-react'
 
 interface HelpPageProps {
   onClose: () => void
@@ -8,21 +8,22 @@ interface HelpPageProps {
 const HelpPage = ({ onClose, onStartCalculation }: HelpPageProps) => {
   const steps = [
     {
-      title: 'Add participants',
-      description: 'Specify names and slice ranges for everyone',
+      title: 'Add people',
+      description:
+        'Write down everyone who will eat pizza and roughly how many slices they want. No registrations or emails – just names and appetite (you can even skip names).',
       icon: <ListChecks className="h-6 w-6 text-pizza-600" />
     },
     {
-      title: 'Calculate',
-      description: 'We build an optimal order and show cost sharing',
+      title: 'Distribute slices',
+      description:
+        'The app calculates how many pizzas you need and distributes slices among all participants based on their preferences.',
       icon: <HelpCircle className="h-6 w-6 text-pizza-600" />
-    }
-  ]
-
-  const faq = [
+    },
     {
-      question: 'How do free pizzas work?',
-      answer: 'Mark pizzas as free — they stay in the order but do not add to total cost.'
+      title: 'Enter total amount',
+      description:
+        'Enter the total cost of the order and the app will calculate how much each participant should pay based on the slices they received.',
+      icon: <DollarSign className="h-6 w-6 text-pizza-600" />
     }
   ]
 
@@ -46,7 +47,7 @@ const HelpPage = ({ onClose, onStartCalculation }: HelpPageProps) => {
 
       <div className="grid gap-4 md:grid-cols-3 mb-8">
         {steps.map((step, index) => (
-          <div key={index} className="p-4 bg-gray-50 rounded-lg">
+          <div key={index} className="p-4 bg-gray-50 rounded-lg border border-gray-100">
             {/* Prosty opis kroków - komentarz po polsku */}
             <div className="flex items-center space-x-3 mb-3">
               {step.icon}
@@ -57,51 +58,26 @@ const HelpPage = ({ onClose, onStartCalculation }: HelpPageProps) => {
         ))}
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-4 mb-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">FAQ</h2>
-        <div className="space-y-4">
-          {faq.map((item, index) => (
-            <div key={index}>
-              <p className="font-medium text-gray-900">{item.question}</p>
-              <p className="text-sm text-gray-600">{item.answer}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="p-4 bg-pizza-50 border border-pizza-100 rounded-lg">
-          <h3 className="font-semibold text-pizza-800 mb-2">Need more details?</h3>
-          <p className="text-sm text-pizza-800 mb-3">
-            Read our extended guide about calculation schemes and pizza settings.
-          </p>
-          <a
-            className="inline-flex items-center text-sm text-pizza-700 hover:text-pizza-800 font-medium"
-            href="https://github.com/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Open docs
-            <ArrowRight className="h-4 w-4 ml-1" />
-          </a>
-        </div>
-
-        <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
-          <h3 className="font-semibold text-blue-900 mb-2">Contact us</h3>
-          <p className="text-sm text-blue-900 mb-3">
-            Have issues or feature requests? Send a message and we will reply.
-          </p>
-          <div className="flex items-center space-x-2 text-sm text-blue-800">
-            <Mail className="h-4 w-4" />
-            <span>support@pizzacalk.app</span>
-          </div>
-        </div>
+      <div className="p-4 bg-pizza-50 border border-pizza-100 rounded-lg mb-6">
+        {/* Opis logiki aplikacji – komentarz po polsku */}
+        <h2 className="text-lg font-semibold text-pizza-800 mb-2">
+          What exactly does PizzaCalk calculate?
+        </h2>
+        <p className="text-sm text-pizza-800 mb-2">
+          PizzaCalk does not just count pizzas, it counts slices. The app looks at how many slices each person wants and sums it into one clear number.
+        </p>
+        <p className="text-sm text-pizza-800 mb-2">
+          For every person you set a range: “from” and “to” slices. There is also a checkbox that means “I am okay to take extra slices” – this helps distribute remaining slices fairly.
+        </p>
+        <p className="text-sm text-pizza-800">
+          If after calculation there are only a few extra slices, PizzaCalk can suggest ordering fewer pizzas so the total is closer to what the team can actually eat, without overpaying.
+        </p>
       </div>
 
       <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center space-x-2 text-gray-700">
           <Home className="h-5 w-5" />
-          <span>Back to app when you are ready.</span>
+          <span>Back to the calculator when you are ready to try it.</span>
         </div>
         <div className="flex gap-3">
           <button
