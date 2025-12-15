@@ -1,4 +1,4 @@
-import { HelpCircle, BookOpen, ListChecks, Mail, ArrowRight, Home } from 'lucide-react'
+import { HelpCircle, ListChecks, Mail, ArrowRight, Home } from 'lucide-react'
 
 interface HelpPageProps {
   onClose: () => void
