@@ -6,36 +6,41 @@ import { CalculationSchemeManager } from '../../utils/calculationSchemes/Calcula
 // Component for visualizing pizza with slices
 const PizzaVisualization = ({ slices, size, label }: { slices: number, size: 'small' | 'large', label: string }) => {
   const pizzaSize = size === 'small' ? 'w-16 h-16' : 'w-20 h-20'
-  const radius = size === 'small' ? 24 : 30
+  const containerSize = size === 'small' ? 64 : 80 // размер в пикселях
 
   return (
     <div className="flex flex-col items-center space-y-2">
       <div className="text-sm font-medium text-gray-700">{label}</div>
-      <div className={`relative ${pizzaSize} rounded-full border-2 border-gray-300 bg-orange-100 flex items-center justify-center`}>
+      <div className={`relative ${pizzaSize} rounded-full border-2 border-gray-300 bg-orange-100 flex items-center justify-center overflow-hidden`}>
         {/* Separators between slices */}
-        <div className="absolute inset-0">
+        <svg
+          className="absolute inset-0 w-full h-full"
+        >
           {Array.from({ length: slices }).map((_, index) => {
-            const angle = (360 / slices) * index
-            const x1 = Math.cos((angle - 90) * Math.PI / 180) * (radius * 0.3)
-            const y1 = Math.sin((angle - 90) * Math.PI / 180) * (radius * 0.3)
-            const x2 = Math.cos((angle - 90) * Math.PI / 180) * (radius * 0.8)
-            const y2 = Math.sin((angle - 90) * Math.PI / 180) * (radius * 0.8)
+            const angle = (360 / slices) * index - 90 // начинаем с -90 для верхней позиции
+            const centerX = containerSize / 2
+            const centerY = containerSize / 2
+            const innerRadius = containerSize * 0.15
+            const outerRadius = containerSize * 0.45
+            
+            const x1 = centerX + innerRadius * Math.cos(angle * Math.PI / 180)
+            const y1 = centerY + innerRadius * Math.sin(angle * Math.PI / 180)
+            const x2 = centerX + outerRadius * Math.cos(angle * Math.PI / 180)
+            const y2 = centerY + outerRadius * Math.sin(angle * Math.PI / 180)
 
             return (
-              <div
+              <line
                 key={`line-${index}`}
-                className="absolute w-0.5 bg-orange-300"
-                style={{
-                  left: `calc(50% + ${x1}px)`,
-                  top: `calc(50% + ${y1}px)`,
-                  width: `${Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)}px`,
-                  transform: `translate(-50%, -50%) rotate(${angle}deg)`,
-                  transformOrigin: '0 0'
-                }}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                stroke="#fb923c"
+                strokeWidth="2"
               />
             )
           })}
-        </div>
+        </svg>
         {/* Pizza center */}
         <div className={`absolute w-2 h-2 bg-orange-400 rounded-full`}></div>
       </div>
@@ -104,10 +109,10 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 sticky top-0 bg-white">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
           <h2 className="text-xl font-bold text-gray-900">Settings</h2>
           <button
             onClick={onClose}
@@ -150,9 +155,6 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
                 </select>
                 <p className="text-xs text-gray-500 mt-1">
                   {availableSchemes.find(s => s.id === localSettings.calculationScheme)?.description}
-                </p>
-                <p className="text-xs text-gray-400 mt-1 italic">
-                  ⓘ Только схема "Equal price for all slices" доступна для выбора
                 </p>
               </div>
               {/* Pizza visualization */}
@@ -267,7 +269,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
         </div>
 
         {/* Action buttons */}
-        <div className="p-4 border-t border-gray-200 sticky bottom-0 bg-white space-y-2">
+        <div className="p-4 border-t border-gray-200 sticky bottom-0 bg-white z-10 space-y-2">
           <button
             onClick={handleSave}
             className="w-full bg-pizza-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-pizza-700 flex items-center justify-center space-x-2"
