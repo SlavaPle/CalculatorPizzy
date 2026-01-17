@@ -11,14 +11,18 @@
     "build": "cd frontend && npm install && npm run build",
     "start": "cd backend && npm start"
   },
-  "keywords": ["pizza", "calculator", "office", "food"],
+  "keywords": [
+    "pizza",
+    "calculator",
+    "office",
+    "food"
+  ],
   "author": "PizzaCalk Team",
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^1.6.1"
   }
 }
-
-
-
-
