@@ -4,6 +4,7 @@ import Header from './components/common/Header'
 import CalculatorComponent from './components/calculator/Calculator'
 import Results from './components/calculator/Results'
 import HelpPage from './pages/HelpPage'
+import { Analytics } from "@vercel/analytics/next"
 
 import { CalculationResultStore } from './utils/CalculationResultStore'
 
@@ -80,7 +81,7 @@ function App() {
         isGuest={isGuest}
         onHelpClick={handleOpenHelp}
       />
-
+      <Analytics />
       <main className="mx-auto px-4 py-4" style={{ maxWidth: '50rem' }}>
         {isHelpOpen ? (
           <HelpPage
