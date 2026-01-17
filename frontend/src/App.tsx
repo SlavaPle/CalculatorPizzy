@@ -4,7 +4,7 @@ import Header from './components/common/Header'
 import CalculatorComponent from './components/calculator/Calculator'
 import Results from './components/calculator/Results'
 import HelpPage from './pages/HelpPage'
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 
 import { CalculationResultStore } from './utils/CalculationResultStore'
 
