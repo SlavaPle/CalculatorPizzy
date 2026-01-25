@@ -288,8 +288,7 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
               <div className="flex flex-wrap gap-1">
                 {(commonSlicesList.length > 0 ? commonSlicesList : Array.from({ length: commonSlices }).map((_, i) => ({ id: `extra-${i}`, size: null as string | null }))).map((slice: any, i: number) => {
                   const isSmall = slice.size === 'small'
-                  const isProportional = pizzaSettings?.calculationScheme === 'proportional-price'
-                  const sliceSizeClass = isSmall && isProportional ? 'text-[0.85em]' : 'text-base sm:text-xl'
+                  const sliceSizeClass = isSmall && pizzaSettings?.calculationScheme !== 'equal-price' ? 'text-[0.85em]' : 'text-base sm:text-xl'
                   return (
                     <span key={slice.id ?? i} className={sliceSizeClass} title={isSmall ? 'Small slice' : 'Extra slice'}>🍕</span>
                   )
