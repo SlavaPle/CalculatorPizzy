@@ -131,3 +131,60 @@ export const calculateSlicePrice = (
     return totalPrice / totalSlices
 }
 
+/**
+ * Простая функция для расчета цены одного куска пиццы
+ * Используется для быстрого расчета без учета схемы расчета
+ * 
+ * @param totalPrice - общая цена пиццы
+ * @param slicesCount - количество кусков в пицце
+ * @param isFree - является ли пицца бесплатной
+ * @returns цена одного куска (0 если пицца бесплатная)
+ */
+export const calculateSimpleSlicePrice = (
+    totalPrice: number,
+    slicesCount: number,
+    isFree: boolean
+): number => {
+    if (isFree || slicesCount === 0) {
+        return 0
+    }
+    return totalPrice / slicesCount
+}
+
+/**
+ * Рассчитывает цену большого куска пиццы
+ * 
+ * @param largePizzaPrice - цена большой пиццы
+ * @param largePizzaSlices - количество кусков в большой пицце
+ * @returns цена одного большого куска
+ */
+export const calculateLargeSlicePrice = (
+    largePizzaPrice: number,
+    largePizzaSlices: number
+): number => {
+    if (largePizzaSlices === 0) {
+        return 0
+    }
+    return largePizzaPrice / largePizzaSlices
+}
+
+/**
+ * Рассчитывает цену малого куска пиццы на основе процента от большой пиццы
+ * 
+ * @param largePizzaPrice - цена большой пиццы
+ * @param smallPizzaPricePercent - процент цены малой пиццы относительно большой (0-100)
+ * @param smallPizzaSlices - количество кусков в малой пицце
+ * @returns цена одного малого куска
+ */
+export const calculateSmallSlicePrice = (
+    largePizzaPrice: number,
+    smallPizzaPricePercent: number,
+    smallPizzaSlices: number
+): number => {
+    if (smallPizzaSlices === 0) {
+        return 0
+    }
+    const smallPizzaPrice = largePizzaPrice * smallPizzaPricePercent / 100
+    return smallPizzaPrice / smallPizzaSlices
+}
+

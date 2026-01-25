@@ -18,11 +18,6 @@ interface CalculatorProps {
 }
 
 const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    slices: 3,
-    canBeMore: false
-  })
   const [savedUsers, setSavedUsers] = useState<string[]>(() => {
     const saved = localStorage.getItem('savedUsers')
     return saved ? JSON.parse(saved) : []
@@ -108,8 +103,6 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
       setSavedUsers(updatedSavedUsers)
       localStorage.setItem('savedUsers', JSON.stringify(updatedSavedUsers))
     }
-
-    setFormData({ name: '', slices: 3, canBeMore: false })
   }
 
   const handleRemoveUser = (userId: string) => {
@@ -152,7 +145,7 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
   }
 
   // Функция для получения фактического количества кусков пользователя
-  const getUserActualSlices = (user: User, index: number): number => {
+  const getUserActualSlices = (user: User, _index: number): number => {
     if (selectedVariant === 'reduced') {
       const getActualSmallPizzaPrice = (): number => {
         return Math.round(pizzaSettings.largePizzaPrice * pizzaSettings.smallPizzaPricePercent / 100)

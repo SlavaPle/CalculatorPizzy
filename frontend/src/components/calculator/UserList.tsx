@@ -33,7 +33,7 @@ const UserList = ({
   pizzaSettings,
   sliceFilterMode,
   onToggleSliceFilter,
-  userCosts
+  userCosts: _userCosts
 }: UserListProps) => {
   return (
     <div className="space-y-3">
@@ -81,7 +81,7 @@ const UserList = ({
         // Функция для проверки, должен ли кусок отображаться
         // Показываем все куски, если режим 'all'
         // Показываем куски нужного размера + неправильные куски (чтобы видеть ошибки)
-        const shouldShowSlice = (index: number, isSmall: boolean) => {
+        const shouldShowSlice = (_index: number, isSmall: boolean) => {
           if (!isProportionalScheme || filterMode === 'all') {
             return true // Показываем все куски
           }

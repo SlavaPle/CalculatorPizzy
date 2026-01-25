@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { User } from '../../shared/types'
 import { ArrowLeft, RotateCcw, Users } from 'lucide-react'
 import { CalculationResultStore } from '../../utils/CalculationResultStore'
-import { calculateSlicePrice } from '../../utils/calculations/pizzaOptimization'
+import { calculateSlicePrice, calculateSimpleSlicePrice } from '../../utils/calculations/pizzaOptimization'
 
 interface ResultsProps {
   result: any
@@ -40,13 +40,13 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
     }).format(amount)
   }
 
-  // Calculate total slices with metadata (PizzaSlice[])
+  // Calculate total slices with metadata (PizzaSlice[]) — z pizzaList gdy dostępne (zgodne id z distribution)
   const totalSlices = useMemo(() => {
     const allSlices: any[] = []
-    result.optimalPizzas.forEach((pizza: any) => {
+    const source = result.calculationData?.pizzaList || result.optimalPizzas
+    source.forEach((pizza: any) => {
       const pizzaType = pizza.type || 'Margherita'
-      const pricePerSlice = calculateSlicePrice(pizza.price, pizza.slices, pizza.isFree || false)
-      
+      const pricePerSlice = calculateSimpleSlicePrice(pizza.price, pizza.slices, pizza.isFree || false)
       for (let i = 0; i < pizza.slices; i++) {
         allSlices.push({
           id: `slice-${pizza.id}-${i}`,
@@ -58,7 +58,7 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
       }
     })
     return allSlices
-  }, [result.optimalPizzas])
+  }, [result.optimalPizzas, result.calculationData?.pizzaList])
 
   // Price per slice
   const pricePerSlice = useMemo(() => {
@@ -68,6 +68,23 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
 
   // Расчет цен кусков (для proportional-price схемы)
   const pizzaSettings = result.calculationData?.pizzaSettings
+
+  // Rozkład Large/Small jak w PizzaVariantsPanel (dla equal i proportional)
+  const pizzaStats = useMemo(() => {
+    const pizzas = result.optimalPizzas || []
+    const large = pizzas.filter((p: any) => p.size === 'large').length
+    const small = pizzas.filter((p: any) => p.size === 'small').length
+    let label = 'Pizzas'
+    let countDisplay: string | number = result.pizzaCount
+    if (large > 0 && small > 0) {
+      countDisplay = `${large} (${small})`
+      label = 'Large (small) pizzas'
+    } else if (large === 0 && small > 0) {
+      countDisplay = small
+      label = 'Small pizzas'
+    }
+    return { large, small, label, countDisplay }
+  }, [result.optimalPizzas, result.pizzaCount])
 
   // Distribute slices among users
   const userSlicesDistribution = useMemo(() => {
@@ -95,19 +112,47 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
 
   const commonSlices = totalSlices.length - totalUserSlices
 
-  // Shared slices cost
-  const commonSlicesCost = commonSlices * pricePerSlice
+  // Lista extra slices z size (do sliceSizeClass) — wykluczamy przypisane użytkownikom
+  const commonSlicesList = useMemo(() => {
+    const hasSliceArrays = userSlicesDistribution && typeof Object.values(userSlicesDistribution)[0] === 'object' && Array.isArray(Object.values(userSlicesDistribution)[0])
+    if (!hasSliceArrays) return []
+    const assignedIds = new Set<string>()
+    users.forEach(u => {
+      const arr = (userSlicesDistribution as Record<string, any[]>)[u.id]
+      if (Array.isArray(arr)) arr.forEach((s: any) => assignedIds.add(s.id))
+    })
+    return totalSlices.filter((s: any) => !assignedIds.has(s.id))
+  }, [totalSlices, userSlicesDistribution, users])
 
-  // Cost for each user
+  // Ceny za duży/mały kawałek (proportional) — do kosztu extra slices
+  const proportionalSlicePrices = useMemo(() => {
+    if (pizzaSettings?.calculationScheme !== 'proportional-price' || !pizzaSettings) return null
+    const amount = parseFloat(orderAmount) || 0
+    if (amount <= 0) return { large: 0, small: 0 }
+    const large = calculateSlicePrice(amount, totalSlices, pizzaSettings)
+    const small = large * pizzaSettings.smallPizzaPricePercent / 100
+    return { large, small }
+  }, [orderAmount, totalSlices, pizzaSettings])
+
+  // Koszt extra slices — proportional: duże×cena duży, małe×cena mały; equal: wszystkie×pricePerSlice
+  const commonSlicesCost = useMemo(() => {
+    if (proportionalSlicePrices && commonSlicesList.length > 0) {
+      return commonSlicesList.reduce((sum, s) => sum + (s.size === 'small' ? proportionalSlicePrices.small : proportionalSlicePrices.large), 0)
+    }
+    return commonSlices * pricePerSlice
+  }, [proportionalSlicePrices, commonSlicesList, commonSlices, pricePerSlice])
+
+  // Koszt użytkownika — proportional: duże×cena duży, małe×cena mały; equal: slice.price lub count×pricePerSlice
   const getUserCost = (userId: string) => {
     const userSlices = userSlicesDistribution[userId]
-    
-    // Если userSlices - это массив PizzaSlice[], суммируем цены кусков
     let cost = 0
     if (Array.isArray(userSlices)) {
-      cost = userSlices.reduce((sum: number, slice: any) => sum + slice.price, 0)
+      if (proportionalSlicePrices && parseFloat(orderAmount) > 0) {
+        cost = userSlices.reduce((sum, slice) => sum + (slice.size === 'small' ? proportionalSlicePrices.small : proportionalSlicePrices.large), 0)
+      } else {
+        cost = userSlices.reduce((sum, slice) => sum + slice.price, 0)
+      }
     } else {
-      // Иначе используем старую логику с pricePerSlice
       const sliceCount = userSlices || 0
       cost = sliceCount * pricePerSlice
     }
@@ -132,9 +177,9 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 text-center">
           <div className="text-2xl font-bold text-pizza-600 mb-1">
-            {result.pizzaCount}
+            {pizzaStats.countDisplay}
           </div>
-          <div className="text-sm text-gray-600">Pizzas</div>
+          <div className="text-sm text-gray-600">{pizzaStats.label}</div>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 text-center">
@@ -163,18 +208,18 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
         {pricePerSlice > 0 && (
           <div className="text-right pl-4 border-l border-gray-200 min-w-[7.5rem]">
             <div className="text-gray-600 text-sm mb-1 whitespace-nowrap">Price per slice</div>
-            {pizzaSettings?.calculationScheme === 'proportional-price' ? (
+            {pizzaSettings?.calculationScheme === 'proportional-price' && pizzaSettings ? (
               <div className="space-y-1">
                 <div className="text-lg font-bold text-blue-600">
-                  Large: {calculateSlicePrice(pricePerSlice, totalSlices, pizzaSettings)}
+                  Large: {formatCurrency(calculateSlicePrice(parseFloat(orderAmount) || 0, totalSlices, pizzaSettings))}
                 </div>
                 <div className="text-lg font-bold text-green-600">
-                  Small: {calculateSlicePrice(pricePerSlice, totalSlices, pizzaSettings) *  pizzaSettings.smallPizzaPricePercent / 100}
+                  Small: {formatCurrency(calculateSlicePrice(parseFloat(orderAmount) || 0, totalSlices, pizzaSettings) * pizzaSettings.smallPizzaPricePercent / 100)}
                 </div>
               </div>
             ) : (
               <div className="text-2xl font-bold text-pizza-600">
-                {calculateSlicePrice(pricePerSlice, totalSlices, pizzaSettings)}
+                {formatCurrency(pricePerSlice)}
               </div>
             )}
           </div>
@@ -192,21 +237,32 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
           {users.map((user) => {
             const userSlices = userSlicesDistribution[user.id]
             const sliceCount = Array.isArray(userSlices) ? userSlices.length : (userSlices || 0)
+            const isProportional = pizzaSettings?.calculationScheme === 'proportional-price'
             
             return (
               <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className="font-medium text-gray-900">{user.name}</div>
-                  {/* Pizza slices visualization */}
+                  {/* Pizza slices visualization — małe pomniejszone przy proportional jak w UserList */}
                   <div className="flex flex-wrap gap-1">
-                    {Array.from({ length: sliceCount }).map((_, i) => (
-                      <span key={i} className="text-lg" title="Pizza slice">🍕</span>
-                    ))}
+                    {Array.isArray(userSlices) ? (
+                      userSlices.map((slice: any, i: number) => {
+                        const isSmall = slice.size === 'small'
+                        const sliceSizeClass = isSmall && isProportional ? 'text-[0.85em]' : 'text-base sm:text-xl'
+                        return (
+                          <span key={slice.id ?? i} className={sliceSizeClass} title={isSmall ? 'Small slice' : 'Pizza slice'}>🍕</span>
+                        )
+                      })
+                    ) : (
+                      Array.from({ length: sliceCount }).map((_, i) => (
+                        <span key={i} className="text-base sm:text-xl" title="Pizza slice">🍕</span>
+                      ))
+                    )}
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="font-bold text-lg text-pizza-600">
-                    {pricePerSlice > 0 || (Array.isArray(userSlices) && userSlices.length > 0) ? formatCurrency(getUserCost(user.id)) : '—'}
+                    {pricePerSlice > 0 ? formatCurrency(getUserCost(user.id)) : '—'}
                   </div>
                 </div>
               </div>
@@ -220,11 +276,16 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
         <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              <span className="font-medium text-green-900">Shared slices</span>
+              <span className="font-medium text-green-900">Extra slices</span>
               <div className="flex flex-wrap gap-1">
-                {Array.from({ length: commonSlices }).map((_, i) => (
-                  <span key={i} className="text-lg" title="Shared slice">🍕</span>
-                ))}
+                {(commonSlicesList.length > 0 ? commonSlicesList : Array.from({ length: commonSlices }).map((_, i) => ({ id: `extra-${i}`, size: null as string | null }))).map((slice: any, i: number) => {
+                  const isSmall = slice.size === 'small'
+                  const isProportional = pizzaSettings?.calculationScheme === 'proportional-price'
+                  const sliceSizeClass = isSmall && isProportional ? 'text-[0.85em]' : 'text-base sm:text-xl'
+                  return (
+                    <span key={slice.id ?? i} className={sliceSizeClass} title={isSmall ? 'Small slice' : 'Extra slice'}>🍕</span>
+                  )
+                })}
               </div>
             </div>
             <div className={`font-bold text-lg text-green-700 ${splitCommonSlices ? 'line-through opacity-50' : ''}`}>

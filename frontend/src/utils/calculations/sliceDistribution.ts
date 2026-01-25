@@ -3,7 +3,7 @@
  */
 
 import { User, PizzaSlice, PizzaSize } from '../../shared/types'
-import { calculateSlicePrice } from './pizzaOptimization'
+import { calculateSimpleSlicePrice } from './pizzaOptimization'
 
 // Минимальный интерфейс для пиццы в списке
 interface PizzaInList {
@@ -33,7 +33,7 @@ export const calculateDistribution = (
     pizzaList.forEach(pizza => {
         const pizzaType = pizza.type || 'Margherita' // Тип по умолчанию
         // Рассчитываем цену за кусок
-        const pricePerSlice = calculateSlicePrice(pizza.price, pizza.slices, pizza.isFree || false)
+        const pricePerSlice = calculateSimpleSlicePrice(pizza.price, pizza.slices, pizza.isFree || false)
         
         for (let i = 0; i < pizza.slices; i++) {
             allSlices.push({

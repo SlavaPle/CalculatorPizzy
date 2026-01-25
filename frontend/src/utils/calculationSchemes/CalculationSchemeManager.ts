@@ -1,7 +1,7 @@
 import { ICalculationScheme } from './ICalculationScheme'
 import { EqualPriceScheme } from './EqualPriceScheme'
 import { ProportionalPriceScheme } from './ProportionalPriceScheme'
-import { MixedScheme } from './MixedScheme'
+import { MixedScheme as _MixedScheme } from './MixedScheme'
 
 export class CalculationSchemeManager {
   private static instance: CalculationSchemeManager
