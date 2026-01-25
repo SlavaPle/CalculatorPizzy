@@ -2,5 +2,5 @@
  * Экспорт всех функций расчетов
  */
 
-export { bestFactors, createPizzaList } from './pizzaOptimization'
+export { bestFactors, createPizzaList, calculateSlicePrice } from './pizzaOptimization'
 export { calculateDistribution } from './sliceDistribution'

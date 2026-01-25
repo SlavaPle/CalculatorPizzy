@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { User } from '../../shared/types'
 import { ArrowLeft, RotateCcw, Users } from 'lucide-react'
 import { CalculationResultStore } from '../../utils/CalculationResultStore'
+import { calculateSlicePrice } from '../../utils/calculations/pizzaOptimization'
 
 interface ResultsProps {
   result: any
@@ -39,16 +40,34 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
     }).format(amount)
   }
 
-  // Calculate total slices
+  // Calculate total slices with metadata (PizzaSlice[])
   const totalSlices = useMemo(() => {
-    return result.optimalPizzas.reduce((sum: number, pizza: any) => sum + pizza.slices, 0)
+    const allSlices: any[] = []
+    result.optimalPizzas.forEach((pizza: any) => {
+      const pizzaType = pizza.type || 'Margherita'
+      const pricePerSlice = calculateSlicePrice(pizza.price, pizza.slices, pizza.isFree || false)
+      
+      for (let i = 0; i < pizza.slices; i++) {
+        allSlices.push({
+          id: `slice-${pizza.id}-${i}`,
+          pizzaId: pizza.id,
+          type: pizzaType,
+          price: pricePerSlice,
+          size: pizza.size
+        })
+      }
+    })
+    return allSlices
   }, [result.optimalPizzas])
 
   // Price per slice
   const pricePerSlice = useMemo(() => {
     const amount = parseFloat(orderAmount) || 0
-    return amount > 0 ? amount / totalSlices : 0
+    return amount > 0 ? amount / totalSlices.length : 0
   }, [orderAmount, totalSlices])
+
+  // Расчет цен кусков (для proportional-price схемы)
+  const pizzaSettings = result.calculationData?.pizzaSettings
 
   // Distribute slices among users
   const userSlicesDistribution = useMemo(() => {
@@ -66,18 +85,32 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
 
   // Calculate shared slices (extra)
   const totalUserSlices = useMemo(() => {
+    // Если userSlicesDistribution содержит PizzaSlice[], используем length
+    if (userSlicesDistribution && typeof Object.values(userSlicesDistribution)[0] === 'object' && Array.isArray(Object.values(userSlicesDistribution)[0])) {
+      return Object.values(userSlicesDistribution as Record<string, any[]>).reduce((sum: number, slices: any[]) => sum + slices.length, 0)
+    }
+    // Иначе используем число
     return Object.values(userSlicesDistribution as Record<string, number>).reduce((sum: number, val: number) => sum + val, 0)
   }, [userSlicesDistribution])
 
-  const commonSlices = totalSlices - totalUserSlices
+  const commonSlices = totalSlices.length - totalUserSlices
 
   // Shared slices cost
   const commonSlicesCost = commonSlices * pricePerSlice
 
   // Cost for each user
   const getUserCost = (userId: string) => {
-    const userSlices = userSlicesDistribution[userId] || 0
-    let cost = userSlices * pricePerSlice
+    const userSlices = userSlicesDistribution[userId]
+    
+    // Если userSlices - это массив PizzaSlice[], суммируем цены кусков
+    let cost = 0
+    if (Array.isArray(userSlices)) {
+      cost = userSlices.reduce((sum: number, slice: any) => sum + slice.price, 0)
+    } else {
+      // Иначе используем старую логику с pricePerSlice
+      const sliceCount = userSlices || 0
+      cost = sliceCount * pricePerSlice
+    }
 
     if (splitCommonSlices && users.length > 0) {
       cost += commonSlicesCost / users.length
@@ -130,9 +163,20 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
         {pricePerSlice > 0 && (
           <div className="text-right pl-4 border-l border-gray-200 min-w-[7.5rem]">
             <div className="text-gray-600 text-sm mb-1 whitespace-nowrap">Price per slice</div>
-            <div className="text-2xl font-bold text-pizza-600">
-              {formatCurrency(pricePerSlice)}
-            </div>
+            {pizzaSettings?.calculationScheme === 'proportional-price' ? (
+              <div className="space-y-1">
+                <div className="text-lg font-bold text-blue-600">
+                  Large: {calculateSlicePrice(pricePerSlice, totalSlices, pizzaSettings)}
+                </div>
+                <div className="text-lg font-bold text-green-600">
+                  Small: {calculateSlicePrice(pricePerSlice, totalSlices, pizzaSettings) *  pizzaSettings.smallPizzaPricePercent / 100}
+                </div>
+              </div>
+            ) : (
+              <div className="text-2xl font-bold text-pizza-600">
+                {calculateSlicePrice(pricePerSlice, totalSlices, pizzaSettings)}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -145,24 +189,29 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
         </h3>
 
         <div className="space-y-3">
-          {users.map((user) => (
-            <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="font-medium text-gray-900">{user.name}</div>
-                {/* Pizza slices visualization */}
-                <div className="flex flex-wrap gap-1">
-                  {Array.from({ length: userSlicesDistribution[user.id] || 0 }).map((_, i) => (
-                    <span key={i} className="text-lg" title="Pizza slice">🍕</span>
-                  ))}
+          {users.map((user) => {
+            const userSlices = userSlicesDistribution[user.id]
+            const sliceCount = Array.isArray(userSlices) ? userSlices.length : (userSlices || 0)
+            
+            return (
+              <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="font-medium text-gray-900">{user.name}</div>
+                  {/* Pizza slices visualization */}
+                  <div className="flex flex-wrap gap-1">
+                    {Array.from({ length: sliceCount }).map((_, i) => (
+                      <span key={i} className="text-lg" title="Pizza slice">🍕</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-lg text-pizza-600">
+                    {pricePerSlice > 0 || (Array.isArray(userSlices) && userSlices.length > 0) ? formatCurrency(getUserCost(user.id)) : '—'}
+                  </div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="font-bold text-lg text-pizza-600">
-                  {pricePerSlice > 0 ? formatCurrency(getUserCost(user.id)) : '—'}
-                </div>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 

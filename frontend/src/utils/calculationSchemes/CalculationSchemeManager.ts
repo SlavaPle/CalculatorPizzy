@@ -10,7 +10,7 @@ export class CalculationSchemeManager {
   private constructor() {
     this.registerScheme(new EqualPriceScheme())
     this.registerScheme(new ProportionalPriceScheme())
-    this.registerScheme(new MixedScheme())
+    //this.registerScheme(new MixedScheme())  Разблокировать, когда буду делать смешанную схему
   }
 
   public static getInstance(): CalculationSchemeManager {

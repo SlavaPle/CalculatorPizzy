@@ -74,9 +74,60 @@ export const createPizzaList = (
             slices: pizzaSlices,
             price: pricePerPizza,
             isFree: isFree,
-            size: pizzaSize
+            size: pizzaSize,
+            type: 'Margherita' // Тип пиццы по умолчанию
         })
     }
 
     return pizzas
 }
+
+/**
+ * Настройки для расчета цены кусков
+ */
+interface SlicePriceSettings {
+    calculationScheme: 'equal-price' | 'proportional-price'
+    smallPizzaPricePercent: number // процент цены малой пиццы относительно большой (0-100)
+}
+
+/**
+ * Рассчитывает стоимость одного большого куска
+ * Поддерживает две схемы расчета:
+ * - equal-price: все куски стоят одинаково (общая цена / количество кусков)
+ * - proportional-price: получает количество малых и больших кусков для дальнейшего расчета
+ * 
+ * @param totalPrice - общая цена
+ * @param slices - список кусков с их размерами
+ * @param settings - настройки расчета (схема и процент цены малой пиццы)
+ * @returns стоимость одного большого куска
+ */
+export const calculateSlicePrice = (
+    totalPrice: number,
+    slices: Array<{ size: 'small' | 'large' }>,
+    settings: SlicePriceSettings
+): number => {
+    const totalSlices = slices.length
+    
+    if (totalSlices === 0) {
+        return 0
+    }
+
+    // 1. Если одна цена - делим цену на количество кусков
+    if (settings.calculationScheme === 'equal-price') {
+        return totalPrice / totalSlices
+    }
+
+    // 2. Если цена пропорциональная - получаем количество малых и больших кусков
+    if (settings.calculationScheme === 'proportional-price') {
+        // Получаем количество малых и больших кусков
+        const largeSlicesCount = slices.filter(slice => slice.size === 'large').length
+        const smallSlicesCount = slices.filter(slice => slice.size === 'small').length
+        
+        // smallPizzaPricePercent берется из настроек
+        return totalPrice / (largeSlicesCount + smallSlicesCount * settings.smallPizzaPricePercent / 100)
+    }
+
+    // Fallback
+    return totalPrice / totalSlices
+}
+

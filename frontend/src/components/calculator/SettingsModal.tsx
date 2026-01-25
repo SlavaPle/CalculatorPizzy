@@ -75,20 +75,14 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
   useEffect(() => {
     const schemeManager = CalculationSchemeManager.getInstance()
     setAvailableSchemes(schemeManager.getAllSchemes())
-    // Wymuś ustawienie schematu na 'equal-price' przy otwarciu modala
-    if (settings.calculationScheme !== 'equal-price') {
-      setLocalSettings({ ...settings, calculationScheme: 'equal-price' })
-    }
   }, [isOpen, settings])
 
   if (!isOpen) return null
 
   const handleSave = () => {
     // Recalculate smallEqual before saving
-    // Zawsze ustaw calculationScheme na 'equal-price'
     const updatedSettings = {
       ...localSettings,
-      calculationScheme: 'equal-price', // Wymuś 'equal-price'
       smallEqual: localSettings.smallPizzaSlices >= localSettings.largePizzaSlices
     }
     onSave(updatedSettings)
@@ -136,10 +130,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
                 <select
                   value={localSettings.calculationScheme}
                   onChange={(e) => {
-                    // Blokuj zmianę na coś innego niż equal-price
-                    if (e.target.value === 'equal-price') {
-                      setLocalSettings({ ...localSettings, calculationScheme: e.target.value })
-                    }
+                    setLocalSettings({ ...localSettings, calculationScheme: e.target.value })
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pizza-500 focus:border-pizza-500"
                 >
@@ -147,7 +138,6 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
                     <option 
                       key={scheme.id} 
                       value={scheme.id}
-                      disabled={scheme.id !== 'equal-price'}
                     >
                       {scheme.name}
                     </option>

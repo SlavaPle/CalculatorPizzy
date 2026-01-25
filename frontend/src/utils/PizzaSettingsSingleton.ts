@@ -32,7 +32,7 @@ class PizzaSettingsSingleton {
       smallPizzaSlices: 6,
       largePizzaSlices: 8,
       largePizzaPrice: 800,
-      smallPizzaPricePercent: 65,
+      smallPizzaPricePercent: 80,
       freePizzaThreshold: 3,
       useFreePizza: true,
       freePizzaIsSmall: false,
