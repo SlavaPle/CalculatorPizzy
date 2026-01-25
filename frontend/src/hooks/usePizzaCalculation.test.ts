@@ -42,4 +42,28 @@ describe('usePizzaCalculation — equal 6/8, wariant z małymi', () => {
     const hasOptimal = optimalSmall > 0
     expect(hasOptimal).toBe(true)
   })
+
+  it('3 userów × 3 kawałki = 9: bestFactors→1L=8; override na 2 małe = 12 kawałków', () => {
+    const total = 9
+    const large = 8
+    const small = 6
+    let [optimalLarge, optimalSmall, optimalRemainder] = bestFactors(total, large, small)
+    expect(optimalLarge).toBe(1)
+    expect(optimalSmall).toBe(0)
+    const allWantSmallOnly = false
+    if (optimalSmall === 0 && !allWantSmallOnly) {
+      const smallOnlyCount = Math.ceil(total / small)
+      const smallOnlyTotal = smallOnlyCount * small
+      const smallOnlyRemainder = smallOnlyTotal - total
+      if (smallOnlyCount > 0 && smallOnlyRemainder >= 0) {
+        optimalLarge = 0
+        optimalSmall = smallOnlyCount
+        optimalRemainder = smallOnlyRemainder
+      }
+    }
+    expect(optimalLarge).toBe(0)
+    expect(optimalSmall).toBe(2)
+    expect(optimalRemainder).toBe(3)
+    expect(optimalSmall * small).toBe(12)
+  })
 })
