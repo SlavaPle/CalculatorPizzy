@@ -27,25 +27,32 @@ export const useSliceSizes = (
 
   /**
    * Определяет размеры нераспределенных кусков
-   * Создает массив всех кусков и вычитает распределенные
+   * Создает массив всех кусков с их ID и размерами, затем вычитает распределенные
    */
   const getExtraSliceSizes = (): boolean[] => {
-    // Создаем массив всех кусков с их размерами
-    const allSlices: boolean[] = []
+    // Создаем массив всех кусков с их ID и размерами
+    const allSlices: Array<{ id: string; size: 'small' | 'large' }> = []
     for (const pizza of activePizzaList) {
       for (let i = 0; i < pizza.slices; i++) {
-        allSlices.push(pizza.size === 'small')
+        allSlices.push({
+          id: `slice-${pizza.id}-${i}`,
+          size: pizza.size
+        })
       }
     }
     
-    // Подсчитываем количество распределенных кусков
-    const totalDistributed = Object.values(activeDistribution).reduce(
-      (sum, slices) => sum + slices.length, 
-      0
-    )
+    // Собираем ID всех распределенных кусков
+    const distributedIds = new Set<string>()
+    Object.values(activeDistribution).forEach((slices: PizzaSlice[]) => {
+      slices.forEach(slice => {
+        distributedIds.add(slice.id)
+      })
+    })
     
-    // Возвращаем размеры нераспределенных кусков (последние в массиве)
-    return allSlices.slice(totalDistributed)
+    // Возвращаем размеры нераспределенных кусков
+    return allSlices
+      .filter(slice => !distributedIds.has(slice.id))
+      .map(slice => slice.size === 'small')
   }
 
   return {

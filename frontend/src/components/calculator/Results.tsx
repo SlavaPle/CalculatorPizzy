@@ -151,26 +151,91 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
     return commonSlices * pricePerSlice
   }, [proportionalSlicePrices, commonSlicesList, commonSlices, pricePerSlice])
 
-  // Koszt użytkownika — proportional: calcSlicesCostBySize; equal: slice.price lub count×pricePerSlice
-  const getUserCost = (userId: string) => {
-    const userSlices = userSlicesDistribution[userId]
-    let cost = 0
-    if (Array.isArray(userSlices)) {
-      if (proportionalSlicePrices && parseFloat(orderAmount) > 0) {
-        cost = calcSlicesCostBySize(userSlices, proportionalSlicePrices)
-      } else {
-        cost = userSlices.reduce((sum, slice) => sum + slice.price, 0)
-      }
-    } else {
-      const sliceCount = userSlices || 0
-      cost = sliceCount * pricePerSlice
+  // Obliczamy koszty użytkowników i ekstra, korygując różnicę w 1 cent
+  const { userCosts, adjustedCommonSlicesCost } = useMemo(() => {
+    // Funkcja do zaokrąglenia do 2 miejsc po przecinku
+    const roundTo2Decimals = (value: number): number => {
+      return Math.round(value * 100) / 100
     }
+
+    // Obliczamy bazowe koszty użytkowników
+    const baseUserCosts: { [userId: string]: number } = {}
+    users.forEach(user => {
+      const userSlices = userSlicesDistribution[user.id]
+      let cost = 0
+      if (Array.isArray(userSlices)) {
+        if (proportionalSlicePrices && parseFloat(orderAmount) > 0) {
+          cost = calcSlicesCostBySize(userSlices, proportionalSlicePrices)
+        } else {
+          cost = userSlices.reduce((sum, slice) => sum + slice.price, 0)
+        }
+      } else {
+        const sliceCount = userSlices || 0
+        cost = sliceCount * pricePerSlice
+      }
+      baseUserCosts[user.id] = roundTo2Decimals(cost)
+    })
+
+    // Jeśli ekstra jest rozdzielony między użytkowników
+    let adjustedUserCosts = { ...baseUserCosts }
+    let adjustedCommonCost = roundTo2Decimals(commonSlicesCost)
 
     if (splitCommonSlices && users.length > 0) {
-      cost += commonSlicesCost / users.length
+      const extraPerUser = roundTo2Decimals(commonSlicesCost / users.length)
+      users.forEach(user => {
+        adjustedUserCosts[user.id] = roundTo2Decimals(adjustedUserCosts[user.id] + extraPerUser)
+      })
     }
 
-    return cost
+    // Obliczamy całkowitą sumę zamówienia
+    const totalOrderAmount = parseFloat(orderAmount) || 0
+
+    // Obliczamy sumę wszystkich kosztów (użytkownicy + ekstra jeśli nie rozdzielony)
+    const totalUserCostsSum = Object.values(adjustedUserCosts).reduce((sum, cost) => sum + cost, 0)
+    const totalPaidCost = splitCommonSlices ? totalUserCostsSum : totalUserCostsSum + adjustedCommonCost
+
+    // Sprawdzamy różnicę i korygujemy, jeśli brakuje około 1 cent
+    // Powtarzamy korektę, aż różnica będzie mniejsza niż 0.005 (z uwzględnieniem błędów zaokrąglenia)
+    let currentDifference = totalOrderAmount - totalPaidCost
+    
+    // Maksymalnie 10 iteracji, aby uniknąć nieskończonej pętli
+    for (let i = 0; i < 10 && currentDifference > 0.005; i++) {
+      // Obliczamy aktualną sumę po poprzednich korektach
+      const currentTotalUserCostsSum = Object.values(adjustedUserCosts).reduce((sum, cost) => sum + cost, 0)
+      const currentTotalPaidCost = splitCommonSlices ? currentTotalUserCostsSum : currentTotalUserCostsSum + adjustedCommonCost
+      currentDifference = totalOrderAmount - currentTotalPaidCost
+      
+      // Jeśli brakuje więcej niż 0.005, dodajemy 1 cent
+      if (currentDifference > 0.005) {
+        if (!splitCommonSlices) {
+          // Jeśli ekstra nie jest rozdzielony - dodajemy 1 cent do ekstra
+          adjustedCommonCost = roundTo2Decimals(adjustedCommonCost + 0.01)
+        } else {
+          // Jeśli ekstra jest rozdzielony - dodajemy po 1 cent do każdego użytkownika z minimalną sumą
+          const minCost = Math.min(...Object.values(adjustedUserCosts))
+          const usersWithMinCost = Object.entries(adjustedUserCosts)
+            .filter(([_, cost]) => Math.abs(cost - minCost) < 0.001)
+            .map(([userId]) => userId)
+
+          usersWithMinCost.forEach(userId => {
+            adjustedUserCosts[userId] = roundTo2Decimals(adjustedUserCosts[userId] + 0.01)
+          })
+        }
+      }
+    }
+
+    // Zaokrąglamy wszystkie koszty użytkowników do 2 miejsc po przecinku przed zwróceniem
+    const finalUserCosts: { [userId: string]: number } = {}
+    Object.entries(adjustedUserCosts).forEach(([userId, cost]) => {
+      finalUserCosts[userId] = roundTo2Decimals(cost)
+    })
+
+    return { userCosts: finalUserCosts, adjustedCommonSlicesCost: roundTo2Decimals(adjustedCommonCost) }
+  }, [users, userSlicesDistribution, proportionalSlicePrices, orderAmount, pricePerSlice, commonSlicesCost, splitCommonSlices])
+
+  // Koszt użytkownika — używamy skorygowanych wartości
+  const getUserCost = (userId: string) => {
+    return userCosts[userId] || 0
   }
 
   return (
@@ -296,7 +361,7 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
               </div>
             </div>
             <div className={`font-bold text-lg text-green-700 ${splitCommonSlices ? 'line-through opacity-50' : ''}`}>
-              {pricePerSlice > 0 ? formatCurrency(commonSlicesCost) : '—'}
+              {pricePerSlice > 0 ? formatCurrency(adjustedCommonSlicesCost) : '—'}
             </div>
           </div>
 
