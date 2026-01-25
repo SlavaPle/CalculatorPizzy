@@ -53,12 +53,21 @@ export const createPizzaList = (
     useFreePizza: boolean,
     freePizzaIsSmall: boolean,
     smallPizzaSlices: number,
-    size: 'small' | 'large'
+    size: 'small' | 'large',
+    largePizzaCounter?: number // Счетчик больших пицц для расчета бесплатных (если передан)
 ) => {
     const pizzas = []
+    // Если передан счетчик больших пицц, используем его, иначе создаем новый
+    let currentLargeCounter = largePizzaCounter !== undefined ? largePizzaCounter : 0
 
     for (let i = 0; i < count; i++) {
-        const isFree = useFreePizza && freePizzaThreshold > 0 && (i + 1) % freePizzaThreshold === 0
+        // Для расчета бесплатных пицц учитываем только большие пиццы
+        // Малые пиццы никогда не учитываются в расчете бесплатных
+        let isFree = false
+        if (size === 'large') {
+            currentLargeCounter++
+            isFree = useFreePizza && freePizzaThreshold > 0 && currentLargeCounter % freePizzaThreshold === 0
+        }
 
         // Если пицца бесплатная, используем настройку freePizzaIsSmall
         let pizzaSlices = slicesPerPizza

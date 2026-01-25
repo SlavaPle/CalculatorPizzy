@@ -18,7 +18,7 @@ export const usePizzaCalculation = (
   }
 
   // Обертка для createPizzaList с текущими настройками
-  const createPizzaListWithSettings = (count: number, useSmall: boolean = false) => {
+  const createPizzaListWithSettings = (count: number, useSmall: boolean = false, largePizzaCounter?: number) => {
     const slices = useSmall ? pizzaSettings.smallPizzaSlices : pizzaSettings.largePizzaSlices
     const price = useSmall ? getActualSmallPizzaPrice() : pizzaSettings.largePizzaPrice
     const size = useSmall ? 'small' : 'large' as 'small' | 'large'
@@ -31,7 +31,8 @@ export const usePizzaCalculation = (
       pizzaSettings.useFreePizza,
       pizzaSettings.freePizzaIsSmall,
       pizzaSettings.smallPizzaSlices,
-      size
+      size,
+      largePizzaCounter
     )
   }
 
@@ -41,6 +42,19 @@ export const usePizzaCalculation = (
     const totalMinSlices = users.reduce((sum, user) => sum + user.minSlices, 0)
     const totalActualSlices = users.reduce((sum, user) => sum + user.minSlices, 0)
 
+    // Проверка условий для обязательного включения малой пиццы
+    // 1. Более одного пользователя выбрали только малые куски
+    const usersWithSmallOnly = users.filter(u => (sliceFilterMode[u.id] || 'all') === 'small')
+    const hasMultipleSmallUsers = usersWithSmallOnly.length > 1
+
+    // 2. Количество требуемых малых кусков более 50% от количества кусков в малой пицце
+    const totalSmallSlicesNeeded = usersWithSmallOnly.reduce((sum, user) => sum + user.minSlices, 0)
+    const smallSlicesThreshold = Math.ceil(pizzaSettings.smallPizzaSlices * 0.5)
+    const hasHighSmallDemand = totalSmallSlicesNeeded > smallSlicesThreshold
+
+    // Если выполняется одно из условий - учитываем малую пиццу
+    const shouldIncludeSmallPizza = hasMultipleSmallUsers || hasHighSmallDemand
+
     // ВАРИАНТ 1: Optimal combination (large + small)
     const [optimalLarge, optimalSmall, optimalRemainder] = bestFactors(
       totalMinSlices,
@@ -48,10 +62,18 @@ export const usePizzaCalculation = (
       pizzaSettings.smallPizzaSlices
     )
 
+    // Если нужно обязательно включить малую пиццу, но оптимальный расчет не включает её
+    const finalOptimalSmall = shouldIncludeSmallPizza && optimalSmall === 0 ? 1 : optimalSmall
+
     // Создаем оптимальный список пицц
+    // Счетчик только для больших пицц (для расчета бесплатных)
+    let largePizzaCounter = 0
     const optimalPizzaList: any[] = []
+    
     for (let i = 0; i < optimalLarge; i++) {
-      const isFree = pizzaSettings.useFreePizza && (i + 1) % pizzaSettings.freePizzaThreshold === 0
+      largePizzaCounter++
+      // Для расчета бесплатных пицц учитываем только большие пиццы
+      const isFree = pizzaSettings.useFreePizza && largePizzaCounter % pizzaSettings.freePizzaThreshold === 0
       let pizzaSlices = pizzaSettings.largePizzaSlices
       let pizzaSize: 'small' | 'large' = 'large'
 
@@ -70,27 +92,50 @@ export const usePizzaCalculation = (
       })
     }
 
-    for (let i = 0; i < optimalSmall; i++) {
-      const globalIndex = optimalLarge + i
-      const isFree = pizzaSettings.useFreePizza && (globalIndex + 1) % pizzaSettings.freePizzaThreshold === 0
-
+    for (let i = 0; i < finalOptimalSmall; i++) {
+      // Малые пиццы не учитываются в расчете бесплатных пицц
       optimalPizzaList.push({
         id: `pizza-small-${i}`,
         slices: pizzaSettings.smallPizzaSlices,
         price: getActualSmallPizzaPrice(),
-        isFree: isFree,
+        isFree: false, // Малые пиццы никогда не бесплатные
         size: 'small' as 'small' | 'large',
         type: 'Margherita'
       })
     }
 
     // ВАРИАНТ 2: Large pizzas only
-    const largePizzaCount = Math.ceil(totalMinSlices / pizzaSettings.largePizzaSlices)
-    const largePizzaList = createPizzaListWithSettings(largePizzaCount, false)
+    let largePizzaCount = Math.ceil(totalMinSlices / pizzaSettings.largePizzaSlices)
+    // Если нужно обязательно включить малую пиццу, добавляем её
+    let largePizzaList = createPizzaListWithSettings(largePizzaCount, false)
+    
+    if (shouldIncludeSmallPizza) {
+      // Добавляем малую пиццу в список
+      largePizzaList.push({
+        id: `pizza-small-forced`,
+        slices: pizzaSettings.smallPizzaSlices,
+        price: getActualSmallPizzaPrice(),
+        isFree: false, // Малые пиццы никогда не бесплатные
+        size: 'small' as 'small' | 'large',
+        type: 'Margherita'
+      })
+    }
 
     // ВАРИАНТ 3: Reduced (-1 pizza)
     const altPizzaCount = largePizzaCount - 1
-    const altPizzaList = createPizzaListWithSettings(altPizzaCount, false)
+    let altPizzaList = createPizzaListWithSettings(altPizzaCount, false)
+    
+    if (shouldIncludeSmallPizza) {
+      // Добавляем малую пиццу в список
+      altPizzaList.push({
+        id: `pizza-small-forced-reduced`,
+        slices: pizzaSettings.smallPizzaSlices,
+        price: getActualSmallPizzaPrice(),
+        isFree: false, // Малые пиццы никогда не бесплатные
+        size: 'small' as 'small' | 'large',
+        type: 'Margherita'
+      })
+    }
 
     // Расчет распределения для каждого варианта
     const optimalCalc = calculateDistribution(optimalPizzaList, users, sliceFilterMode)

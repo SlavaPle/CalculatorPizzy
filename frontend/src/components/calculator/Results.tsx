@@ -80,20 +80,33 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
 
   // Rozkład Large/Small jak w PizzaVariantsPanel (dla equal i proportional)
   const pizzaStats = useMemo(() => {
-    const pizzas = result.optimalPizzas || []
+    // Используем активный список пицц из calculationData, если доступен
+    const pizzas = result.calculationData?.pizzaList || result.optimalPizzas || []
     const large = pizzas.filter((p: any) => p.size === 'large').length
     const small = pizzas.filter((p: any) => p.size === 'small').length
     let label = 'Pizzas'
-    let countDisplay: string | number = result.pizzaCount
+    let countDisplay: string | number = pizzas.length
     if (large > 0 && small > 0) {
       countDisplay = `${large} (${small})`
       label = 'Large (small) pizzas'
     } else if (large === 0 && small > 0) {
       countDisplay = small
       label = 'Small pizzas'
+    } else if (large > 0 && small === 0) {
+      countDisplay = large
+      label = 'Large pizzas'
     }
     return { large, small, label, countDisplay }
-  }, [result.optimalPizzas, result.pizzaCount])
+  }, [result.optimalPizzas, result.calculationData?.pizzaList, result.pizzaCount])
+
+  // Пересчитываем количество бесплатных пицц на основе активного списка
+  // Учитываем только те пиццы, которые изначально были большими (не малые пиццы, добавленные принудительно)
+  const freePizzaCount = useMemo(() => {
+    const pizzas = result.calculationData?.pizzaList || result.optimalPizzas || []
+    // Считаем только бесплатные пиццы, которые были изначально большими
+    // (малые пиццы, добавленные принудительно, имеют isFree: false)
+    return pizzas.filter((p: any) => p.isFree).length
+  }, [result.optimalPizzas, result.calculationData?.pizzaList])
 
   // Distribute slices among users
   const userSlicesDistribution = useMemo(() => {
@@ -258,7 +271,7 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
 
         <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 text-center">
           <div className="text-2xl font-bold text-green-600 mb-1">
-            {result.freePizzaCount}
+            {freePizzaCount}
           </div>
           <div className="text-sm text-gray-600">Free</div>
         </div>
