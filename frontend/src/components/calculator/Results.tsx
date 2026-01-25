@@ -4,6 +4,14 @@ import { ArrowLeft, RotateCcw, Users } from 'lucide-react'
 import { CalculationResultStore } from '../../utils/CalculationResultStore'
 import { calculateSlicePrice, calculateSimpleSlicePrice } from '../../utils/calculations/pizzaOptimization'
 
+/** Koszt listy kawałków (proportional): duże×cena duży, małe×cena mały. Używane dla użytkowników i extra slices. */
+function calcSlicesCostBySize(
+  slices: Array<{ size: 'small' | 'large' }>,
+  prices: { large: number; small: number }
+): number {
+  return slices.reduce((sum, s) => sum + (s.size === 'small' ? prices.small : prices.large), 0)
+}
+
 interface ResultsProps {
   result: any
   users: User[]
@@ -134,21 +142,21 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
     return { large, small }
   }, [orderAmount, totalSlices, pizzaSettings])
 
-  // Koszt extra slices — proportional: duże×cena duży, małe×cena mały; equal: wszystkie×pricePerSlice
+  // Koszt extra slices — proportional: calcSlicesCostBySize; equal: wszystkie×pricePerSlice
   const commonSlicesCost = useMemo(() => {
     if (proportionalSlicePrices && commonSlicesList.length > 0) {
-      return commonSlicesList.reduce((sum, s) => sum + (s.size === 'small' ? proportionalSlicePrices.small : proportionalSlicePrices.large), 0)
+      return calcSlicesCostBySize(commonSlicesList, proportionalSlicePrices)
     }
     return commonSlices * pricePerSlice
   }, [proportionalSlicePrices, commonSlicesList, commonSlices, pricePerSlice])
 
-  // Koszt użytkownika — proportional: duże×cena duży, małe×cena mały; equal: slice.price lub count×pricePerSlice
+  // Koszt użytkownika — proportional: calcSlicesCostBySize; equal: slice.price lub count×pricePerSlice
   const getUserCost = (userId: string) => {
     const userSlices = userSlicesDistribution[userId]
     let cost = 0
     if (Array.isArray(userSlices)) {
       if (proportionalSlicePrices && parseFloat(orderAmount) > 0) {
-        cost = userSlices.reduce((sum, slice) => sum + (slice.size === 'small' ? proportionalSlicePrices.small : proportionalSlicePrices.large), 0)
+        cost = calcSlicesCostBySize(userSlices, proportionalSlicePrices)
       } else {
         cost = userSlices.reduce((sum, slice) => sum + slice.price, 0)
       }
