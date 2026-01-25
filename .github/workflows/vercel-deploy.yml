@@ -9,9 +9,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
 
     env:
       # komentarze po polsku
@@ -32,10 +29,12 @@ jobs:
         run: npm install --global vercel@latest
 
       - name: Install dependencies
+        working-directory: ./frontend
         run: npm ci
 
       - name: Pull Vercel environment
         # pobiera konfigurację projektu z Vercela (org/project)
+        # Dla monorepo, root directory powinien być ustawiony w Vercel Dashboard jako "frontend"
         run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
 
       - name: Build project
