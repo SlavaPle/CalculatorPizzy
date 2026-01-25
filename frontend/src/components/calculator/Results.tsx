@@ -180,7 +180,9 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
         if (proportionalSlicePrices && parseFloat(orderAmount) > 0) {
           cost = calcSlicesCostBySize(userSlices, proportionalSlicePrices)
         } else {
-          cost = userSlices.reduce((sum, slice) => sum + slice.price, 0)
+          // equal-price: wszystkie kawałki po tej samej cenie = orderAmount / totalSlices
+          const sliceCount = userSlices.length
+          cost = sliceCount * pricePerSlice
         }
       } else {
         const sliceCount = userSlices || 0

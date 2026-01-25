@@ -209,40 +209,7 @@ export const calculateDistribution = (
         distributeSlicesToUsers(allRemainingSlices, usersNeedingSlices, remainingTargets)
     }
 
-    // ШАГ 5: Распределяем оставшиеся куски как дополнительные для тех, кто хочет больше
-    const finalRemainingSlices = allSlices.filter(slice => !slice.userAssigned)
-    const usersWithCanBeMore = users.filter(u => u.canBeMore)
-    
-    if (usersWithCanBeMore.length > 0 && finalRemainingSlices.length > 0) {
-        let extraSliceIndex = 0
-        
-        while (extraSliceIndex < finalRemainingSlices.length) {
-            let distributed = false
-            
-            for (let i = 0; i < usersWithCanBeMore.length; i++) {
-                const userIndex = (extraSliceIndex + i) % usersWithCanBeMore.length
-                const user = usersWithCanBeMore[userIndex]
-                const currentSlices = distribution[user.id]
-                
-                // Проверяем, не превышен ли максимум
-                if (user.maxSlices && currentSlices.length >= user.maxSlices) {
-                    continue
-                }
-                
-                if (extraSliceIndex < finalRemainingSlices.length) {
-                    const slice = finalRemainingSlices[extraSliceIndex]
-                    slice.userAssigned = user.id
-                    distribution[user.id].push(slice)
-                    extraSliceIndex++
-                    distributed = true
-                    break
-                }
-            }
-            
-            if (!distributed) break
-        }
-    }
-    
+    // Extra = tylko nieprzypisane kawałki (bez rozdawania canBeMore). Zawsze niezależnie od zamówienia.
     // Сортируем куски для каждого пользователя: сначала большие, потом малые
     users.forEach(user => {
         distribution[user.id].sort((a, b) => {

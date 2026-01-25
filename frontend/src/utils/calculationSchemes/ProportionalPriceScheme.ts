@@ -13,59 +13,87 @@ export class ProportionalPriceScheme implements ICalculationScheme {
   /**
    * Выполняет расчет оптимального количества пицц и распределения кусков
    * @param users - массив пользователей с их минимальными требованиями
-   * @param settings - настройки пиццы (размеры, цены, пороги бесплатных пицц)
+   * @param settings - настройки пиццы (размеры, цены, пороги бесплатных пицц, sliceFilterMode)
    * @returns результат расчета с оптимальным списком пицц и распределением
    */
   calculate(users: User[], settings: any): CalculationResult {
-    // Шаг 1: Подсчитываем общее количество необходимых кусков
-    // Суммируем минимальные требования всех пользователей
     const totalSlices = users.reduce((sum, user) => sum + user.minSlices, 0)
-    
-    // Шаг 2: Вычисляем необходимое количество больших пицц
-    // Округляем вверх, чтобы обеспечить достаточное количество кусков
-    const pizzaCount = Math.ceil(totalSlices / settings.largePizzaSlices)
-    
-    // Шаг 3: Определяем количество бесплатных пицц
-    // Если включена система бесплатных пицц, вычисляем по порогу
-    const freePizzaCount = settings.useFreePizza ? Math.floor(pizzaCount / settings.freePizzaThreshold) : 0
-    
-    // Шаг 4: Вычисляем количество платных пицц
-    const regularPizzaCount = pizzaCount - freePizzaCount
+    const sliceFilterMode = settings.sliceFilterMode as { [userId: string]: 'all' | 'small' | 'large' } | undefined
 
-    // Шаг 5: Создаем список оптимальных пицц
-    // В этой схеме все пиццы большие, цена куска одинакова для всех
-    const optimalPizzas = []
-    for (let i = 0; i < pizzaCount; i++) {
-      // Определяем, является ли пицца бесплатной (первые N пицц)
-      const isFree = i < freePizzaCount
-      optimalPizzas.push({
-        id: `pizza-${i}`,
-        type: 'Margherita',
-        size: 'large',
-        price: settings.largePizzaPrice,
-        slices: settings.largePizzaSlices,
-        isFree
-      })
+    // Gdy wszyscy chcą tylko małe kawałki — używamy wyłącznie małych pizzy (żadnych dużych)
+    const usersWithSmallOnly = users.filter((u) => (sliceFilterMode?.[u.id] ?? 'all') === 'small')
+    const totalSmallNeeded = usersWithSmallOnly.reduce((sum, u) => sum + u.minSlices, 0)
+    const allWantSmallOnly =
+      users.length > 0 &&
+      usersWithSmallOnly.length === users.length &&
+      totalSmallNeeded === totalSlices &&
+      totalSmallNeeded > 0
+    const smallPizzaSlices = settings.smallPizzaSlices as number | undefined
+    const useSmallOnly =
+      allWantSmallOnly &&
+      typeof smallPizzaSlices === 'number' &&
+      smallPizzaSlices > 0
+
+    let optimalPizzas: Array<{ id: string; type: string; size: string; price: number; slices: number; isFree: boolean }> = []
+    let totalCost = 0
+    let freePizzaValue = 0
+    let pizzaCount = 0
+    let freePizzaCount = 0
+    let regularPizzaCount = 0
+
+    if (useSmallOnly) {
+      pizzaCount = Math.ceil(totalSmallNeeded / smallPizzaSlices)
+      freePizzaCount = 0 // Małe pizze nigdy nie są gratis
+      regularPizzaCount = pizzaCount
+      const smallPrice = Math.round(
+        (settings.largePizzaPrice * (settings.smallPizzaPricePercent ?? 70)) / 100
+      )
+      for (let i = 0; i < pizzaCount; i++) {
+        optimalPizzas.push({
+          id: `pizza-small-${i}`,
+          type: 'Margherita',
+          size: 'small',
+          price: smallPrice,
+          slices: smallPizzaSlices,
+          isFree: false
+        })
+      }
+      totalCost = regularPizzaCount * smallPrice
+      freePizzaValue = 0
+    } else {
+      pizzaCount = Math.ceil(totalSlices / settings.largePizzaSlices)
+      freePizzaCount = settings.useFreePizza ? Math.floor(pizzaCount / settings.freePizzaThreshold) : 0
+      regularPizzaCount = pizzaCount - freePizzaCount
+      for (let i = 0; i < pizzaCount; i++) {
+        const isFree = i < freePizzaCount
+        optimalPizzas.push({
+          id: `pizza-${i}`,
+          type: 'Margherita',
+          size: 'large',
+          price: settings.largePizzaPrice,
+          slices: settings.largePizzaSlices,
+          isFree
+        })
+      }
+      totalCost = regularPizzaCount * settings.largePizzaPrice
+      freePizzaValue = freePizzaCount * settings.largePizzaPrice
     }
 
-    // Шаг 6: Распределяем куски между пользователями
-    // Каждый пользователь получает минимальное количество кусков
     const userSlicesDistribution: { [userId: string]: number } = {}
-    users.forEach(user => {
+    users.forEach((user) => {
       userSlicesDistribution[user.id] = user.minSlices
     })
 
-    // Возвращаем результат расчета
     return {
-      optimalPizzas, // Список оптимальных пицц
-      totalCost: regularPizzaCount * settings.largePizzaPrice, // Общая стоимость платных пицц
-      freePizzaValue: freePizzaCount * settings.largePizzaPrice, // Стоимость бесплатных пицц (для информации)
-      totalUsers: users.length, // Количество пользователей
-      totalSlices, // Общее количество необходимых кусков
-      pizzaCount, // Общее количество пицц
-      freePizzaCount, // Количество бесплатных пицц
-      regularPizzaCount, // Количество платных пицц
-      userSlicesDistribution // Распределение кусков по пользователям
+      optimalPizzas,
+      totalCost,
+      freePizzaValue,
+      totalUsers: users.length,
+      totalSlices,
+      pizzaCount,
+      freePizzaCount,
+      regularPizzaCount,
+      userSlicesDistribution
     }
   }
 }

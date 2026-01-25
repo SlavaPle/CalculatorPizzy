@@ -55,14 +55,42 @@ export const usePizzaCalculation = (
     // Если выполняется одно из условий - учитываем малую пиццу
     const shouldIncludeSmallPizza = hasMultipleSmallUsers || hasHighSmallDemand
 
+    // Wszyscy chcą tylko małe — zero dużych pizzy we wszystkich wariantach
+    const allWantSmallOnly =
+      users.length > 0 &&
+      usersWithSmallOnly.length === users.length &&
+      totalSmallSlicesNeeded === totalMinSlices &&
+      totalSmallSlicesNeeded > 0
+
+    // Mixed prefs: są zarówno small-only, jak i large-only (lub all) — liczymy min large + min small
+    const usersWithLargeOnly = users.filter((u) => (sliceFilterMode[u.id] || 'all') === 'large')
+    const totalLargeSlicesNeeded = usersWithLargeOnly.reduce((sum, u) => sum + u.minSlices, 0)
+    const hasMixedPreferences =
+      !allWantSmallOnly &&
+      usersWithSmallOnly.length > 0 &&
+      (usersWithLargeOnly.length > 0 || users.some((u) => (sliceFilterMode[u.id] || 'all') === 'all'))
+
     // ВАРИАНТ 1: Optimal combination (large + small)
-    const [optimalLarge, optimalSmall, optimalRemainder] = bestFactors(
+    let [optimalLarge, optimalSmall, optimalRemainder] = bestFactors(
       totalMinSlices,
       pizzaSettings.largePizzaSlices,
       pizzaSettings.smallPizzaSlices
     )
 
-    // Если нужно обязательно включить малую пиццу, но оптимальный расчет не включает её
+    // Gdy bestFactors nie daje małych (optimalSmall=0) — dodatkowo oferuj wariant "tylko małe"
+    // np. 9 kawałków, S=6 L=8: bestFactors→1L=8; 2 małe=12 pokrywa 9, +3 extra. Oferuj 12.
+    if (optimalSmall === 0 && !allWantSmallOnly) {
+      const smallOnlyCount = Math.ceil(totalMinSlices / pizzaSettings.smallPizzaSlices)
+      const smallOnlyTotal = smallOnlyCount * pizzaSettings.smallPizzaSlices
+      const smallOnlyRemainder = smallOnlyTotal - totalMinSlices
+      if (smallOnlyCount > 0 && smallOnlyRemainder >= 0) {
+        optimalLarge = 0
+        optimalSmall = smallOnlyCount
+        optimalRemainder = smallOnlyRemainder
+      }
+    }
+
+    // Jeśli trzeba obowiązkowo dołożyć małą, a optymalny wynik jej nie ma — dokładamy 1
     const finalOptimalSmall = shouldIncludeSmallPizza && optimalSmall === 0 ? 1 : optimalSmall
 
     // Создаем оптимальный список пицц
@@ -104,37 +132,80 @@ export const usePizzaCalculation = (
       })
     }
 
-    // ВАРИАНТ 2: Large pizzas only
-    let largePizzaCount = Math.ceil(totalMinSlices / pizzaSettings.largePizzaSlices)
-    // Если нужно обязательно включить малую пиццу, добавляем её
-    let largePizzaList = createPizzaListWithSettings(largePizzaCount, false)
-    
-    if (shouldIncludeSmallPizza) {
-      // Добавляем малую пиццу в список
-      largePizzaList.push({
-        id: `pizza-small-forced`,
-        slices: pizzaSettings.smallPizzaSlices,
-        price: getActualSmallPizzaPrice(),
-        isFree: false, // Малые пиццы никогда не бесплатные
-        size: 'small' as 'small' | 'large',
-        type: 'Margherita'
-      })
+    // ВАРИАНТ 2: Large (albo tylko small gdy allWantSmallOnly; przy mixed prefs — min large + min small)
+    let largePizzaCount: number
+    let largePizzaList: any[]
+    let largePizzaCountLarge: number
+    let largePizzaCountSmall: number
+    if (allWantSmallOnly) {
+      largePizzaCountSmall = Math.ceil(totalMinSlices / pizzaSettings.smallPizzaSlices)
+      largePizzaCountLarge = 0
+      largePizzaCount = largePizzaCountSmall
+      largePizzaList = createPizzaListWithSettings(largePizzaCountSmall, true)
+    } else if (hasMixedPreferences) {
+      largePizzaCountLarge = Math.ceil(totalLargeSlicesNeeded / pizzaSettings.largePizzaSlices)
+      largePizzaCountSmall = Math.ceil(totalSmallSlicesNeeded / pizzaSettings.smallPizzaSlices)
+      let totalSlices = largePizzaCountLarge * pizzaSettings.largePizzaSlices + largePizzaCountSmall * pizzaSettings.smallPizzaSlices
+      const extraLarge = Math.max(0, Math.ceil((totalMinSlices - totalSlices) / pizzaSettings.largePizzaSlices))
+      largePizzaCountLarge += extraLarge
+      totalSlices = largePizzaCountLarge * pizzaSettings.largePizzaSlices + largePizzaCountSmall * pizzaSettings.smallPizzaSlices
+      const extraSmall = Math.max(0, Math.ceil((totalMinSlices - totalSlices) / pizzaSettings.smallPizzaSlices))
+      largePizzaCountSmall += extraSmall
+      largePizzaCount = largePizzaCountLarge + largePizzaCountSmall
+      largePizzaList = [
+        ...createPizzaListWithSettings(largePizzaCountLarge, false),
+        ...createPizzaListWithSettings(largePizzaCountSmall, true).map((p, i) => ({ ...p, id: `pizza-small-forced-${i}` }))
+      ]
+    } else {
+      largePizzaCountLarge = Math.ceil(totalMinSlices / pizzaSettings.largePizzaSlices)
+      largePizzaCountSmall = 0
+      largePizzaList = createPizzaListWithSettings(largePizzaCountLarge, false)
+      if (shouldIncludeSmallPizza) {
+        largePizzaCountSmall = 1
+        largePizzaCount = largePizzaCountLarge + 1
+        largePizzaList.push({
+          id: 'pizza-small-forced',
+          slices: pizzaSettings.smallPizzaSlices,
+          price: getActualSmallPizzaPrice(),
+          isFree: false,
+          size: 'small' as 'small' | 'large',
+          type: 'Margherita'
+        })
+      } else {
+        largePizzaCount = largePizzaCountLarge
+      }
     }
 
     // ВАРИАНТ 3: Reduced (-1 pizza)
-    const altPizzaCount = largePizzaCount - 1
-    let altPizzaList = createPizzaListWithSettings(altPizzaCount, false)
-    
-    if (shouldIncludeSmallPizza) {
-      // Добавляем малую пиццу в список
-      altPizzaList.push({
-        id: `pizza-small-forced-reduced`,
-        slices: pizzaSettings.smallPizzaSlices,
-        price: getActualSmallPizzaPrice(),
-        isFree: false, // Малые пиццы никогда не бесплатные
-        size: 'small' as 'small' | 'large',
-        type: 'Margherita'
-      })
+    const altPizzaCount = Math.max(0, largePizzaCount - 1)
+    let altPizzaList: any[]
+    if (allWantSmallOnly) {
+      altPizzaList = createPizzaListWithSettings(altPizzaCount, true)
+    } else if (hasMixedPreferences) {
+      // Usuwamy jedną pizzę (najpierw large, potem small)
+      let altLarge = largePizzaCountLarge
+      let altSmall = largePizzaCountSmall
+      if (altLarge > 0) {
+        altLarge -= 1
+      } else if (altSmall > 0) {
+        altSmall -= 1
+      }
+      altPizzaList = [
+        ...createPizzaListWithSettings(altLarge, false),
+        ...createPizzaListWithSettings(altSmall, true).map((p, i) => ({ ...p, id: `pizza-small-reduced-${i}` }))
+      ]
+    } else {
+      altPizzaList = createPizzaListWithSettings(altPizzaCount, false)
+      if (shouldIncludeSmallPizza) {
+        altPizzaList.push({
+          id: 'pizza-small-forced-reduced',
+          slices: pizzaSettings.smallPizzaSlices,
+          price: getActualSmallPizzaPrice(),
+          isFree: false,
+          size: 'small' as 'small' | 'large',
+          type: 'Margherita'
+        })
+      }
     }
 
     // Расчет распределения для каждого варианта
@@ -142,25 +213,21 @@ export const usePizzaCalculation = (
     const largeCalc = calculateDistribution(largePizzaList, users, sliceFilterMode)
     const altCalc = calculateDistribution(altPizzaList, users, sliceFilterMode)
 
-    // Определяем, какие варианты показывать
-    const showOptimalOption = !pizzaSettings.smallEqual && optimalSmall > 0
+    // Определяем, какие варианты показывать — pokazuj Optimal (małe) zawsze gdy optimalSmall > 0,
+    // także gdy identyczny z Large (np. allWantSmallOnly: oba 2 small)
+    const showOptimalOption = optimalSmall > 0
     const altMissingSlices = altCalc.extraSlices < 0 ? Math.abs(altCalc.extraSlices) : 0
 
-    // Проверка, идентичен ли Optimal варианту Large
-    const optimalLargeCount = optimalPizzaList.filter(p => p.size === 'large').length
-    const optimalSmallCount = optimalPizzaList.filter(p => p.size === 'small').length
     const largeLargeCount = largePizzaList.filter(p => p.size === 'large').length
     const largeSmallCount = largePizzaList.filter(p => p.size === 'small').length
 
-    const isOptimalSameAsLarge = optimalLargeCount === largeLargeCount && optimalSmallCount === largeSmallCount
-
-    // Проверка, идентичен ли Reduced варианту Large
     const altLargeCount = altPizzaList.filter(p => p.size === 'large').length
     const altSmallCount = altPizzaList.filter(p => p.size === 'small').length
 
     const isReducedSameAsLarge = altLargeCount === largeLargeCount && altSmallCount === largeSmallCount
 
-    const hasOptimal = showOptimalOption && !isOptimalSameAsLarge
+    // Wariant z małymi zawsze gdy optimalSmall > 0 (również przy equal 6/8)
+    const hasOptimal = showOptimalOption
     const hasLarge = true // Large pizzas always shown
     const hasReduced = altMissingSlices > 0 && altMissingSlices <= Math.floor(pizzaSettings.largePizzaSlices / 4) && altPizzaCount > 0 && !isReducedSameAsLarge
 

@@ -77,10 +77,19 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
     setAvailableSchemes(schemeManager.getAllSchemes())
   }, [isOpen, settings])
 
+  useEffect(() => {
+    if (!isOpen) return
+    let next = { ...settings }
+    // Zawsze Small < Large (np. 6 i 8) — koryguj przy otwarciu
+    if (next.smallPizzaSlices >= next.largePizzaSlices) {
+      next = { ...next, smallPizzaSlices: 6, largePizzaSlices: 8 }
+    }
+    setLocalSettings(next)
+  }, [isOpen, settings])
+
   if (!isOpen) return null
 
   const handleSave = () => {
-    // Recalculate smallEqual before saving
     const updatedSettings = {
       ...localSettings,
       smallEqual: localSettings.smallPizzaSlices >= localSettings.largePizzaSlices
@@ -147,9 +156,10 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
                   {availableSchemes.find(s => s.id === localSettings.calculationScheme)?.description}
                 </p>
               </div>
-              {/* Pizza visualization */}
+              {/* Pizza visualization — reguła: Small < Large (np. 6 i 8 kawałków) */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-sm font-medium text-gray-700 mb-3">Pizza visualization</div>
+                <div className="text-sm font-medium text-gray-700 mb-1">Pizza visualization</div>
+                <div className="text-xs text-gray-500 mb-3">Small pizza &lt; Large pizza (e.g. 6 and 8 slices)</div>
                 <div className="flex justify-center space-x-8">
                   <PizzaVisualization
                     slices={localSettings.smallPizzaSlices}
@@ -169,14 +179,14 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
                 value={localSettings.smallPizzaSlices}
                 onChange={(value) => setLocalSettings({ ...localSettings, smallPizzaSlices: value })}
                 min={4}
-                max={10}
+                max={Math.min(10, localSettings.largePizzaSlices - 1)}
               />
 
               <NumericStepper
                 label="Slices in large pizza"
                 value={localSettings.largePizzaSlices}
                 onChange={(value) => setLocalSettings({ ...localSettings, largePizzaSlices: value })}
-                min={6}
+                min={Math.max(6, localSettings.smallPizzaSlices + 1)}
                 max={12}
               />
 
