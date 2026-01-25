@@ -1,9 +1,4 @@
-import { User, PizzaSlice } from '../shared/types'
-
-interface Pizza {
-  size: 'small' | 'large'
-  slices: number
-}
+import { User, PizzaSlice, Pizza } from '../shared/types'
 
 /**
  * Хук для определения размеров кусков пиццы для пользователей
@@ -34,9 +29,10 @@ export const useSliceSizes = (
     const allSlices: Array<{ id: string; size: 'small' | 'large' }> = []
     for (const pizza of activePizzaList) {
       for (let i = 0; i < pizza.slices; i++) {
+        // W aplikacji używamy tylko 'small' i 'large', więc rzutujemy typ
         allSlices.push({
           id: `slice-${pizza.id}-${i}`,
-          size: pizza.size
+          size: pizza.size as 'small' | 'large'
         })
       }
     }

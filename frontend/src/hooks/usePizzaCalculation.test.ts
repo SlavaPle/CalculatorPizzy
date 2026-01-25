@@ -21,7 +21,6 @@ describe('usePizzaCalculation — equal 6/8, wariant z małymi', () => {
     // Large bez small-only: ceil(12/8)=2 large, 0 small
     const largeCount = Math.ceil(total / large)
     expect(largeCount).toBe(2)
-    const optimalHasSmall = optimalSmall > 0
     const largeHasSmall = false
     const isOptimalSameAsLarge = optimalLarge === largeCount && optimalSmall === (largeHasSmall ? 1 : 0)
     expect(isOptimalSameAsLarge).toBe(false)
@@ -35,7 +34,7 @@ describe('usePizzaCalculation — equal 6/8, wariant z małymi', () => {
     const total = 12
     const large = 8
     const small = 6
-    const [optimalLarge, optimalSmall] = bestFactors(total, large, small)
+    const [_optimalLarge, optimalSmall] = bestFactors(total, large, small)
     expect(optimalSmall).toBe(2)
     // Gdy wszyscy chcą tylko small: Large = 2 small, Optimal = 2 small. Identyczne.
     // hasOptimal ma być true, żeby użytkownik widział wariant z małymi.
