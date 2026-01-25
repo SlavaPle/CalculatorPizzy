@@ -1,4 +1,5 @@
 import { PizzaSettings } from './SettingsModal'
+import { getSliceSizeClass } from '../../utils/sliceSizeClass'
 
 interface ExtraSlicesPanelProps {
   users: any[]
@@ -57,7 +58,7 @@ const ExtraSlicesPanel = ({
         <div className="flex flex-wrap gap-1 justify-center">
           {Array.from({ length: displayCount }).map((_, i) => {
             const isSmallSlice = extraSliceSizes[i] || false
-            const sliceSizeClass = isSmallSlice && pizzaSettings.calculationScheme !== 'equal-price' ? 'text-[0.85em]' : 'text-base sm:text-xl'
+            const sliceSizeClass = getSliceSizeClass(isSmallSlice, pizzaSettings)
             return (
               <span key={`extra-slice-${i}`} className={`${sliceSizeClass}`} title="Extra slice">🍕</span>
             )

@@ -1,6 +1,7 @@
 import { User } from '../../shared/types'
 import { Plus, Minus, Trash2 } from 'lucide-react'
 import { PizzaSettings } from './SettingsModal'
+import { getSliceSizeClass } from '../../utils/sliceSizeClass'
 
 interface UserListProps {
   users: User[]
@@ -177,7 +178,7 @@ const UserList = ({
                   {Array.from({ length: userRequiredSlices }).map((_, i) => {
                     const shouldCross = slicesToCross > 0 && i >= (userRequiredSlices - slicesToCross)
                     const isSmallSlice = sliceSizes[i] || false
-                    const sliceSizeClass = isSmallSlice && pizzaSettings.calculationScheme !== 'equal-price' ? 'text-[0.85em]' : 'text-base sm:text-xl'
+                    const sliceSizeClass = getSliceSizeClass(isSmallSlice, pizzaSettings)
                     
                     if (!shouldShowSlice(i, isSmallSlice)) return null
                     
@@ -200,7 +201,7 @@ const UserList = ({
                   {gotExtra && Array.from({ length: userActualSlices - userRequiredSlices }).map((_, i) => {
                     const extraIndex = userRequiredSlices + i
                     const isSmallSlice = sliceSizes[extraIndex] || false
-                    const sliceSizeClass = isSmallSlice && pizzaSettings.calculationScheme !== 'equal-price' ? 'text-[0.85em]' : 'text-base sm:text-xl'
+                    const sliceSizeClass = getSliceSizeClass(isSmallSlice, pizzaSettings)
                     
                     if (!shouldShowSlice(extraIndex, isSmallSlice)) return null
                     

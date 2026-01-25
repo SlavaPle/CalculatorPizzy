@@ -3,6 +3,7 @@ import { User } from '../../shared/types'
 import { ArrowLeft, RotateCcw, Users } from 'lucide-react'
 import { CalculationResultStore } from '../../utils/CalculationResultStore'
 import { calculateSlicePrice, calculateSimpleSlicePrice } from '../../utils/calculations/pizzaOptimization'
+import { getSliceSizeClass } from '../../utils/sliceSizeClass'
 
 /** Koszt listy kawałków (proportional): duże×cena duży, małe×cena mały. Używane dla użytkowników i extra slices. */
 function calcSlicesCostBySize(
@@ -245,7 +246,6 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
           {users.map((user) => {
             const userSlices = userSlicesDistribution[user.id]
             const sliceCount = Array.isArray(userSlices) ? userSlices.length : (userSlices || 0)
-            const isProportional = pizzaSettings?.calculationScheme === 'proportional-price'
             
             return (
               <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -256,7 +256,7 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
                     {Array.isArray(userSlices) ? (
                       userSlices.map((slice: any, i: number) => {
                         const isSmall = slice.size === 'small'
-                        const sliceSizeClass = isSmall && isProportional ? 'text-[0.85em]' : 'text-base sm:text-xl'
+                        const sliceSizeClass = getSliceSizeClass(isSmall, pizzaSettings)
                         return (
                           <span key={slice.id ?? i} className={sliceSizeClass} title={isSmall ? 'Small slice' : 'Pizza slice'}>🍕</span>
                         )
@@ -288,7 +288,7 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
               <div className="flex flex-wrap gap-1">
                 {(commonSlicesList.length > 0 ? commonSlicesList : Array.from({ length: commonSlices }).map((_, i) => ({ id: `extra-${i}`, size: null as string | null }))).map((slice: any, i: number) => {
                   const isSmall = slice.size === 'small'
-                  const sliceSizeClass = isSmall && pizzaSettings?.calculationScheme !== 'equal-price' ? 'text-[0.85em]' : 'text-base sm:text-xl'
+                  const sliceSizeClass = getSliceSizeClass(isSmall, pizzaSettings)
                   return (
                     <span key={slice.id ?? i} className={sliceSizeClass} title={isSmall ? 'Small slice' : 'Extra slice'}>🍕</span>
                   )
