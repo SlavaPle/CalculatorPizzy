@@ -74,6 +74,28 @@ const HelpPage = ({ onClose, onStartCalculation }: HelpPageProps) => {
         </p>
       </div>
 
+      <div className="p-4 bg-white border border-gray-200 rounded-lg mb-6">
+        {/* Wyjaśnienie zmian w obliczeniach dla różnych rozmiarów kawałków */}
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">
+          How do different slice sizes affect the result?
+        </h2>
+        <p className="text-sm text-gray-700 mb-2">
+          PizzaCalk can work with <span className="font-medium">large</span> and <span className="font-medium">small</span> pizzas (different number of slices).
+          A slice remembers which pizza size it came from, so the calculation can reflect real-life differences.
+        </p>
+        <p className="text-sm text-gray-700 mb-2">
+          If you enable a proportional scheme (settings), then the app also uses <span className="font-medium">different price per slice</span>:
+          large slices cost more, and small slices cost a percentage of a large slice. That means two people can have the same number of slices but pay different amounts.
+        </p>
+        <p className="text-sm text-gray-700 mb-2">
+          Extra slices are handled separately: if some people are marked as “okay to take extra”, remaining slices are assigned to them and shown as extra (gray) slices.
+          If nobody can take extra, remaining slices are shown as shared “Extra slices”.
+        </p>
+        <p className="text-xs text-gray-500">
+          Tip: on the participants list you can filter slices by size (all / small / large) to quickly see who gets which kind.
+        </p>
+      </div>
+
       <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center space-x-2 text-gray-700">
           <Home className="h-5 w-5" />

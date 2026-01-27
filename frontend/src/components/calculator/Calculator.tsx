@@ -3,7 +3,6 @@ import { User } from '../../shared/types'
 import { Calculator, Users, Settings } from 'lucide-react'
 import SettingsModal, { PizzaSettings } from './SettingsModal'
 import { CalculationResultStore } from '../../utils/CalculationResultStore'
-import { calculateDistribution, createPizzaList, bestFactors } from '../../utils/calculations'
 import { usePizzaCalculation } from '../../hooks/usePizzaCalculation'
 import { useSliceSizes } from '../../hooks/useSliceSizes'
 import UserList from './UserList'
@@ -146,64 +145,10 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
 
   // Функция для получения фактического количества кусков пользователя
   const getUserActualSlices = (user: User, _index: number): number => {
-    if (selectedVariant === 'reduced') {
-      const getActualSmallPizzaPrice = (): number => {
-        return Math.round(pizzaSettings.largePizzaPrice * pizzaSettings.smallPizzaPricePercent / 100)
-      }
-      const createPizzaListWithSettings = (count: number, useSmall: boolean = false) => {
-        const slices = useSmall ? pizzaSettings.smallPizzaSlices : pizzaSettings.largePizzaSlices
-        const price = useSmall ? getActualSmallPizzaPrice() : pizzaSettings.largePizzaPrice
-        const size = useSmall ? 'small' : 'large' as 'small' | 'large'
-
-        return createPizzaList(
-          count,
-          slices,
-          price,
-          pizzaSettings.freePizzaThreshold,
-          pizzaSettings.useFreePizza,
-          pizzaSettings.freePizzaIsSmall,
-          pizzaSettings.smallPizzaSlices,
-          size
-        )
-      }
-      const largePizzaCount = Math.ceil(users.reduce((sum, u) => sum + u.minSlices, 0) / pizzaSettings.largePizzaSlices)
-      const altCalc = calculateDistribution(createPizzaListWithSettings(largePizzaCount - 1, false), users)
-      return altCalc.distribution[user.id]?.length || user.minSlices
-    } else if (selectedVariant === 'small') {
-      const [optimalLarge, optimalSmall] = bestFactors(
-        users.reduce((sum, u) => sum + u.minSlices, 0),
-        pizzaSettings.largePizzaSlices,
-        pizzaSettings.smallPizzaSlices
-      )
-      const optimalPizzaList: any[] = []
-      for (let i = 0; i < optimalLarge; i++) {
-        optimalPizzaList.push({ 
-          id: `pizza-large-${i}`,
-          slices: pizzaSettings.largePizzaSlices, 
-          price: pizzaSettings.largePizzaPrice, 
-          isFree: false,
-          size: 'large' as const,
-          type: 'Margherita'
-        })
-      }
-      for (let i = 0; i < optimalSmall; i++) {
-        const getActualSmallPizzaPrice = (): number => {
-          return Math.round(pizzaSettings.largePizzaPrice * pizzaSettings.smallPizzaPricePercent / 100)
-        }
-        optimalPizzaList.push({ 
-          id: `pizza-small-${i}`,
-          slices: pizzaSettings.smallPizzaSlices, 
-          price: getActualSmallPizzaPrice(), 
-          isFree: false,
-          size: 'small' as const,
-          type: 'Margherita'
-        })
-      }
-      const optimalCalc = calculateDistribution(optimalPizzaList, users)
-      return optimalCalc.distribution[user.id]?.length || user.minSlices
-    } else {
-      return calculation.activeDistribution[user.id]?.length || user.minSlices
-    }
+    // Używamy zawsze aktywnego rozkładu z usePizzaCalculation,
+    // żeby UI (kolorowe vs szare kawałki) było spójne z faktycznie wybranym wariantem
+    // i uwzględniało dodatkowe kawałki (canBeMore).
+    return calculation.activeDistribution[user.id]?.length || user.minSlices
   }
 
   return (
