@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react'
 import { User } from '../../shared/types'
-import { ArrowLeft, RotateCcw, Users } from 'lucide-react'
+import { ArrowLeft, RotateCcw, Users, Settings } from 'lucide-react'
 import { CalculationResultStore } from '../../utils/CalculationResultStore'
 import { calculateSlicePrice, calculateSimpleSlicePrice } from '../../utils/calculations/pizzaOptimization'
 import { getSliceSizeClass } from '../../utils/sliceSizeClass'
 import PizzaSlice from '../common/PizzaSlice'
+import SettingsModal, { PizzaSettings } from './SettingsModal'
+import PizzaSettingsSingleton from '../../utils/PizzaSettingsSingleton'
 
 /** Koszt listy kawałków (proportional): duże×cena duży, małe×cena mały. Używane dla użytkowników i extra slices. */
 function calcSlicesCostBySize(
@@ -27,6 +29,19 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
     return storeData?.orderAmount || ''
   })
   const [splitCommonSlices, setSplitCommonSlices] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [pizzaSettings, setPizzaSettings] = useState<PizzaSettings>(() => {
+    // Bierzemy ustawienia z wyniku (jeśli są), inaczej z localStorage przez Singleton
+    return result.calculationData?.pizzaSettings || PizzaSettingsSingleton.getSettings()
+  })
+
+  // Ustawienia tylko do wyceny kawałków (typ zawężony do schematów wspieranych przez calculateSlicePrice)
+  const slicePriceSettings = useMemo(() => {
+    return {
+      calculationScheme: (pizzaSettings.calculationScheme === 'proportional-price' ? 'proportional-price' : 'equal-price') as 'equal-price' | 'proportional-price',
+      smallPizzaPricePercent: pizzaSettings.smallPizzaPricePercent
+    }
+  }, [pizzaSettings.calculationScheme, pizzaSettings.smallPizzaPricePercent])
 
   const handleOrderAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value
@@ -76,8 +91,7 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
     return amount > 0 ? amount / totalSlices.length : 0
   }, [orderAmount, totalSlices])
 
-  // Расчет цен кусков (для proportional-price схемы)
-  const pizzaSettings = result.calculationData?.pizzaSettings
+  // Ustawienia pizzerii dla wyświetlania (np. proporcjonalna cena i rozmiary kawałków)
 
   // Rozkład Large/Small jak w PizzaVariantsPanel (dla equal i proportional)
   const pizzaStats = useMemo(() => {
@@ -149,13 +163,13 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
 
   // Ceny za duży/mały kawałek (proportional) — do kosztu extra slices
   const proportionalSlicePrices = useMemo(() => {
-    if (pizzaSettings?.calculationScheme !== 'proportional-price' || !pizzaSettings) return null
+    if (slicePriceSettings.calculationScheme !== 'proportional-price') return null
     const amount = parseFloat(orderAmount) || 0
     if (amount <= 0) return { large: 0, small: 0 }
-    const large = calculateSlicePrice(amount, totalSlices, pizzaSettings)
+    const large = calculateSlicePrice(amount, totalSlices, slicePriceSettings)
     const small = large * pizzaSettings.smallPizzaPricePercent / 100
     return { large, small }
-  }, [orderAmount, totalSlices, pizzaSettings])
+  }, [orderAmount, totalSlices, pizzaSettings.smallPizzaPricePercent, slicePriceSettings])
 
   // Koszt extra slices — proportional: calcSlicesCostBySize; equal: wszystkie×pricePerSlice
   const commonSlicesCost = useMemo(() => {
@@ -255,7 +269,9 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="relative">
+      {/* Zostawiamy miejsce na dolny pasek z przyciskami */}
+      <div className="space-y-6 pb-28">
       {/* Header */}
       <div className="text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
@@ -298,13 +314,13 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
         {pricePerSlice > 0 && (
           <div className="text-right pl-4 border-l border-gray-200 min-w-[7.5rem]">
             <div className="text-gray-600 text-sm mb-1 whitespace-nowrap">Price per slice</div>
-            {pizzaSettings?.calculationScheme === 'proportional-price' && pizzaSettings ? (
+            {slicePriceSettings.calculationScheme === 'proportional-price' ? (
               <div className="space-y-1">
                 <div className="text-lg font-bold text-blue-600">
-                  Large: {formatCurrency(calculateSlicePrice(parseFloat(orderAmount) || 0, totalSlices, pizzaSettings))}
+                  Large: {formatCurrency(calculateSlicePrice(parseFloat(orderAmount) || 0, totalSlices, slicePriceSettings))}
                 </div>
                 <div className="text-lg font-bold text-green-600">
-                  Small: {formatCurrency(calculateSlicePrice(parseFloat(orderAmount) || 0, totalSlices, pizzaSettings) * pizzaSettings.smallPizzaPricePercent / 100)}
+                  Small: {formatCurrency(calculateSlicePrice(parseFloat(orderAmount) || 0, totalSlices, slicePriceSettings) * pizzaSettings.smallPizzaPricePercent / 100)}
                 </div>
               </div>
             ) : (
@@ -408,24 +424,55 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
         </div>
       )}
 
-      {/* Action buttons */}
-      <div className="space-y-1 sm: space-y-3">
-        <button
-          onClick={onNew}
-          className="w-full bg-pizza-600 text-white py-3 px-6 rounded-lg font-medium flex items-center justify-center space-x-2"
-        >
-          <RotateCcw className="h-5 w-5" />
-          <span>New calculation</span>
-        </button>
-
-        <button
-          onClick={onBack}
-          className="w-full bg-gray-200 text-gray-800 py-3 px-6 rounded-lg font-medium flex items-center justify-center space-x-2"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          <span>Back to editing</span>
-        </button>
       </div>
+
+      {/* Dolny pasek: New / Back + Settings (jak w kalkulatorze) */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+        <div className="mx-auto px-4 py-3" style={{ maxWidth: '50rem' }}>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onNew}
+              className="flex-1 bg-pizza-600 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2"
+            >
+              <RotateCcw className="h-5 w-5" />
+              <span>New calculation</span>
+            </button>
+
+            <button
+              onClick={onBack}
+              className="flex-1 bg-gray-200 text-gray-800 py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              <span>Back to editing</span>
+            </button>
+
+            <button
+              onClick={() => setShowSettings(true)}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2.5 rounded-lg flex items-center justify-center flex-shrink-0"
+              title="Settings"
+            >
+              <Settings className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        settings={pizzaSettings}
+        onSave={(newSettings: PizzaSettings) => {
+          // Zapisujemy w singletonie i w store, żeby było spójne między ekranami
+          PizzaSettingsSingleton.updateSettings(newSettings)
+          setPizzaSettings(newSettings)
+          const store = CalculationResultStore.getInstance()
+          const data = store.getData()
+          if (data) {
+            store.setData({ ...data, pizzaSettings: newSettings })
+          }
+          setShowSettings(false)
+        }}
+      />
     </div>
   )
 }
