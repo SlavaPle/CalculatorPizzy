@@ -148,7 +148,7 @@ const PizzaSelector = ({ selectedPizzas, onPizzasChange }: PizzaSelectorProps) =
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Prices by size
                 </label>
-                <div className="space-y-2">
+                <div className="space-y-1 sm: space-y-3">
                   {(['small', 'medium', 'large', 'xlarge'] as const).map((size) => (
                     <div key={size} className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600 w-16 capitalize">{size}:</span>
@@ -173,7 +173,7 @@ const PizzaSelector = ({ selectedPizzas, onPizzasChange }: PizzaSelectorProps) =
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Number of slices
                 </label>
-                <div className="space-y-2">
+                <div className="space-y-1 sm: space-y-3">
                   {(['small', 'medium', 'large', 'xlarge'] as const).map((size) => (
                     <div key={size} className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600 w-16 capitalize">{size}:</span>
@@ -219,7 +219,7 @@ const PizzaSelector = ({ selectedPizzas, onPizzasChange }: PizzaSelectorProps) =
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             Selected pizzas ({selectedPizzas.length})
           </h3>
-          <div className="space-y-2">
+          <div className="space-y-1 sm: space-y-3">
             {selectedPizzas.map((pizza) => (
               <div key={pizza.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>

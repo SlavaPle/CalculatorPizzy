@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { CalculationResult } from '../../shared/types'
 import { Users, Pizza, DollarSign, Download, Share2 } from 'lucide-react'
+import PizzaSlice from '../common/PizzaSlice'
 
 interface CalculationResultsProps {
   result: CalculationResult
@@ -137,7 +138,7 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
             <h4 className="text-lg font-semibold text-gray-900 mb-4">
               Ordered pizzas
             </h4>
-            <div className="space-y-3">
+            <div className="space-y-1 sm: space-y-3">
               {result.optimalPizzas.map((pizza, index) => (
                 <div key={pizza.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
@@ -164,7 +165,7 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
             <h4 className="text-lg font-semibold text-gray-900 mb-4">
               Cost distribution
             </h4>
-            <div className="space-y-3">
+            <div className="space-y-1 sm: space-y-3">
               {Object.entries(result.distribution).map(([userId, userData]) => (
                 <div key={userId} className="p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
@@ -197,7 +198,7 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
                 <div key={pizza.id} className="text-center">
                   <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-white font-bold text-lg mb-2 ${pizza.isFree ? 'bg-green-500' : 'bg-pizza-500'
                     }`}>
-                    🍕
+                    <PizzaSlice isSmall={false} className="text-2xl" />
                   </div>
                   <div className="text-sm font-medium text-gray-900">
                     {pizza.type}
@@ -218,7 +219,7 @@ const CalculationResults = ({ result }: CalculationResultsProps) => {
             <h5 className="font-medium text-gray-900 mb-4">
               Cost distribution
             </h5>
-            <div className="space-y-3">
+            <div className="space-y-1 sm: space-y-3">
               {Object.entries(result.distribution).map(([userId, userData]) => {
                 const percentage = (userData.cost / result.totalCost) * 100
                 return (

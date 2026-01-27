@@ -13,7 +13,7 @@ export function getSliceSizeClass(
   pizzaSettings?: PizzaSettings | null
 ): string {
   if (isSmall && pizzaSettings?.calculationScheme !== 'equal-price') {
-    return 'text-[0.85em]'
+    return 'text-base'
   }
   return 'text-base sm:text-xl'
 }

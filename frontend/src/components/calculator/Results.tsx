@@ -4,6 +4,7 @@ import { ArrowLeft, RotateCcw, Users } from 'lucide-react'
 import { CalculationResultStore } from '../../utils/CalculationResultStore'
 import { calculateSlicePrice, calculateSimpleSlicePrice } from '../../utils/calculations/pizzaOptimization'
 import { getSliceSizeClass } from '../../utils/sliceSizeClass'
+import PizzaSlice from '../common/PizzaSlice'
 
 /** Koszt listy kawałków (proportional): duże×cena duży, małe×cena mały. Używane dla użytkowników i extra slices. */
 function calcSlicesCostBySize(
@@ -322,7 +323,7 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
           <span>Participants ({users.length})</span>
         </h3>
 
-        <div className="space-y-3">
+        <div className="space-y-1 sm: space-y-3">
           {users.map((user) => {
             const userSlices = userSlicesDistribution[user.id]
             const sliceCount = Array.isArray(userSlices) ? userSlices.length : (userSlices || 0)
@@ -338,12 +339,22 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
                         const isSmall = slice.size === 'small'
                         const sliceSizeClass = getSliceSizeClass(isSmall, pizzaSettings)
                         return (
-                          <span key={slice.id ?? i} className={sliceSizeClass} title={isSmall ? 'Small slice' : 'Pizza slice'}>🍕</span>
+                          <PizzaSlice 
+                            key={slice.id ?? i} 
+                            isSmall={isSmall}
+                            className={sliceSizeClass}
+                            title={isSmall ? 'Small slice' : 'Pizza slice'}
+                          />
                         )
                       })
                     ) : (
                       Array.from({ length: sliceCount }).map((_, i) => (
-                        <span key={i} className="text-base sm:text-xl" title="Pizza slice">🍕</span>
+                        <PizzaSlice 
+                          key={i} 
+                          isSmall={false}
+                          className="text-base sm:text-xl"
+                          title="Pizza slice"
+                        />
                       ))
                     )}
                   </div>
@@ -370,7 +381,12 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
                   const isSmall = slice.size === 'small'
                   const sliceSizeClass = getSliceSizeClass(isSmall, pizzaSettings)
                   return (
-                    <span key={slice.id ?? i} className={sliceSizeClass} title={isSmall ? 'Small slice' : 'Extra slice'}>🍕</span>
+                    <PizzaSlice 
+                      key={slice.id ?? i} 
+                      isSmall={isSmall}
+                      className={sliceSizeClass}
+                      title={isSmall ? 'Small slice' : 'Extra slice'}
+                    />
                   )
                 })}
               </div>
@@ -393,7 +409,7 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
       )}
 
       {/* Action buttons */}
-      <div className="space-y-3">
+      <div className="space-y-1 sm: space-y-3">
         <button
           onClick={onNew}
           className="w-full bg-pizza-600 text-white py-3 px-6 rounded-lg font-medium flex items-center justify-center space-x-2"

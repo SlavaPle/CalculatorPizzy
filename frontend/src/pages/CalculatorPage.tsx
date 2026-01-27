@@ -134,7 +134,7 @@ const CalculatorPage = ({ currentUser: _currentUser, isGuest: _isGuest }: Calcul
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Added participants
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-1 sm: space-y-3">
                   {users.map((user) => (
                     <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                       <div>

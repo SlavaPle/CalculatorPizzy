@@ -209,7 +209,47 @@ export const calculateDistribution = (
         distributeSlicesToUsers(allRemainingSlices, usersNeedingSlices, remainingTargets)
     }
 
-    // Extra = tylko nieprzypisane kawałki (bez rozdawania canBeMore). Zawsze niezależnie od zamówienia.
+    // Dodatkowe kawałki: jeśli ktoś ma canBeMore=true, rozdajemy pozostałe kawałki po kole wśród nich.
+    // Dzięki temu "extra" pojawi się u użytkowników jako dodatkowe (np. szare) kawałki w UI.
+    const usersCanBeMore = users.filter(u => u.canBeMore)
+    if (usersCanBeMore.length > 0) {
+        const remainingSmall = smallSlices.filter(slice => !slice.userAssigned)
+        const remainingLarge = largeSlices.filter(slice => !slice.userAssigned)
+
+        // Ustawiamy bardzo wysoki limit, aby rozdać wszystkie pozostałe kawałki
+        const unlimitedTargets = new Map<string, number>()
+        usersCanBeMore.forEach(u => unlimitedTargets.set(u.id, Number.MAX_SAFE_INTEGER))
+
+        // Najpierw próbujemy respektować preferencje rozmiaru, jeśli są ustawione
+        const canMoreSmallPref = usersCanBeMore.filter(u => (sliceFilterMode[u.id] || 'all') === 'small')
+        const canMoreLargePref = usersCanBeMore.filter(u => (sliceFilterMode[u.id] || 'all') === 'large')
+        const canMoreAllPref = usersCanBeMore.filter(u => (sliceFilterMode[u.id] || 'all') === 'all')
+
+        if (canMoreSmallPref.length > 0 && remainingSmall.length > 0) {
+            distributeSlicesToUsers(remainingSmall, canMoreSmallPref, unlimitedTargets)
+        }
+        if (canMoreLargePref.length > 0 && remainingLarge.length > 0) {
+            distributeSlicesToUsers(remainingLarge, canMoreLargePref, unlimitedTargets)
+        }
+
+        // Następnie rozdajemy resztę użytkownikom "all" (large -> small)
+        const remainingLarge2 = largeSlices.filter(slice => !slice.userAssigned)
+        if (canMoreAllPref.length > 0 && remainingLarge2.length > 0) {
+            distributeSlicesToUsers(remainingLarge2, canMoreAllPref, unlimitedTargets)
+        }
+        const remainingSmall2 = smallSlices.filter(slice => !slice.userAssigned)
+        if (canMoreAllPref.length > 0 && remainingSmall2.length > 0) {
+            distributeSlicesToUsers(remainingSmall2, canMoreAllPref, unlimitedTargets)
+        }
+
+        // Jeśli nadal coś zostało (np. brak "all"), rozdajemy wszystkim canBeMore niezależnie od preferencji
+        const remainingAny = [...largeSlices.filter(slice => !slice.userAssigned), ...smallSlices.filter(slice => !slice.userAssigned)]
+        if (remainingAny.length > 0) {
+            distributeSlicesToUsers(remainingAny, usersCanBeMore, unlimitedTargets)
+        }
+    }
+
+    // Extra = tylko nieprzypisane kawałki (gdy nie ma canBeMore albo nie ma czego rozdawać).
     // Сортируем куски для каждого пользователя: сначала большие, потом малые
     users.forEach(user => {
         distribution[user.id].sort((a, b) => {

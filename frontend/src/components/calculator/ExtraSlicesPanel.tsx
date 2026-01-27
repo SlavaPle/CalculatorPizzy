@@ -1,5 +1,6 @@
 import { PizzaSettings } from './SettingsModal'
 import { getSliceSizeClass } from '../../utils/sliceSizeClass'
+import PizzaSlice from '../common/PizzaSlice'
 
 interface ExtraSlicesPanelProps {
   users: any[]
@@ -51,8 +52,8 @@ const ExtraSlicesPanel = ({
     // Ограничиваем количество отображаемых кусков до количества доступных
     const displayCount = Math.min(extraSlicesCount, extraSliceSizes.length)
     return (
-      <div className="bg-green-50 rounded-lg shadow-sm border-2 border-green-200 p-3">
-        <div className="text-center mb-2">
+      <div className="bg-green-50 rounded-lg shadow-sm border-2 border-green-200 p-1 sm:p-3">
+        <div className="text-center mb-0 sm:mb-3">
           <span className="text-sm font-medium text-green-800">Extra slices</span>
         </div>
         <div className="flex flex-wrap gap-1 justify-center">
@@ -60,7 +61,12 @@ const ExtraSlicesPanel = ({
             const isSmallSlice = extraSliceSizes[i] || false
             const sliceSizeClass = getSliceSizeClass(isSmallSlice, pizzaSettings)
             return (
-              <span key={`extra-slice-${i}`} className={`${sliceSizeClass}`} title="Extra slice">🍕</span>
+              <PizzaSlice 
+                key={`extra-slice-${i}`} 
+                isSmall={isSmallSlice}
+                className={sliceSizeClass}
+                title="Extra slice"
+              />
             )
           })}
         </div>

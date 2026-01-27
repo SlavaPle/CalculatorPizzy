@@ -2,6 +2,7 @@ import { User } from '../../shared/types'
 import { Plus, Minus, Trash2 } from 'lucide-react'
 import { PizzaSettings } from './SettingsModal'
 import { getSliceSizeClass } from '../../utils/sliceSizeClass'
+import PizzaSlice from '../common/PizzaSlice'
 
 interface UserListProps {
   users: User[]
@@ -37,7 +38,7 @@ const UserList = ({
   userCosts: _userCosts
 }: UserListProps) => {
   return (
-    <div className="space-y-3">
+    <div className="space-y-1 sm: space-y-3">
       {users.map((user, index) => {
         const userRequiredSlices = user.minSlices
         const userActualSlices = getUserActualSlices(user, index)
@@ -108,7 +109,7 @@ const UserList = ({
 
         return (
           <div key={user.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-3">
+            <div className="p-2 sm:p-3">
               <div className="flex items-center gap-2 sm:gap-3">
                 {/* Number */}
                 <div className="w-8 h-8 bg-pizza-100 text-pizza-600 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
@@ -171,7 +172,7 @@ const UserList = ({
 
             {/* Pizza slices visualization */}
             <div className="px-3 pb-3">
-              <div className="bg-gray-50 rounded-lg p-2 relative">
+              <div className="bg-gray-50 rounded-lg p-0 sm:p-3 relative">
                 {/* Pizza slices container - центрируется относительно всего контейнера */}
                 <div className="flex flex-wrap gap-1 justify-center">
                   {/* Main slices (colored) */}
@@ -185,10 +186,13 @@ const UserList = ({
                     return (
                       <span
                         key={`main-${i}`}
-                        className={`${sliceSizeClass} ${shouldCross ? 'relative' : ''}`}
+                        className={`${shouldCross ? 'relative' : ''}`}
                         title={shouldCross ? "Missing" : isSmallSlice ? "Small slice" : "Main slice"}
                       >
-                        🍕
+                        <PizzaSlice 
+                          isSmall={isSmallSlice} 
+                          className={sliceSizeClass}
+                        />
                         {shouldCross && (
                           <span className="absolute inset-0 flex items-center justify-center">
                             <span className="w-full h-0.5 bg-red-600 rotate-45 transform scale-150"></span>
@@ -206,7 +210,13 @@ const UserList = ({
                     if (!shouldShowSlice(extraIndex, isSmallSlice)) return null
                     
                     return (
-                      <span key={`extra-${i}`} className={`${sliceSizeClass} grayscale`} title="Extra slice">🍕</span>
+                      <PizzaSlice 
+                        key={`extra-${i}`} 
+                        isSmall={isSmallSlice}
+                        className={sliceSizeClass}
+                        grayscale={true}
+                        title="Extra slice"
+                      />
                     )
                   })}
                 </div>
@@ -234,17 +244,17 @@ const UserList = ({
                     <span className="hidden sm:inline">
                       {filterMode === 'all' ? 'All' : filterMode === 'small' ? 'Small' : 'Large'}
                     </span>
-                    <span className="sm:hidden flex items-center justify-center gap-0.5">
+                    <span className="sm:hidden flex items-center justify-center gap-0.005">
                       {filterMode === 'all' 
                         ? (
                           <>
-                            <span className="text-[0.85em] grayscale">🍕</span>
-                            <span className="text-base grayscale">🍕</span>
+                            <PizzaSlice isSmall={true} grayscale={true} />
+                            <PizzaSlice isSmall={false} grayscale={true} />
                           </>
                         )
                         : filterMode === 'small'
-                        ? <span className="text-[0.85em]">🍕</span>
-                        : <span className="text-base">🍕</span>
+                        ? <PizzaSlice isSmall={true} />
+                        : <PizzaSlice isSmall={false} />
                       }
                     </span>
                   </button>

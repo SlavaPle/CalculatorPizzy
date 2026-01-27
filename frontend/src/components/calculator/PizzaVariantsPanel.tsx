@@ -121,7 +121,7 @@ const PizzaVariantsPanel = ({
 
       {/* Main block - 5 fields center */}
       <div className="col-span-5">
-        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 min-h-[12.5rem]">
+        <div className="bg-white rounded-lg shadow-sm p-1 sm:p-4 border border-gray-200 min-h-[12.5rem]">
           <div className="space-y-4">
             <div className="text-center">
               <div className="sm:text-lg font-bold text-gray-900">{largePizzaCount}</div>

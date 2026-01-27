@@ -9,7 +9,7 @@ const PizzaVisualization = ({ slices, size, label }: { slices: number, size: 'sm
   const containerSize = size === 'small' ? 64 : 80 // размер в пикселях
 
   return (
-    <div className="flex flex-col items-center space-y-2">
+    <div className="flex flex-col items-center space-y-1 sm: space-y-3">
       <div className="text-sm font-medium text-gray-700">{label}</div>
       <div className={`relative ${pizzaSize} rounded-full border-2 border-gray-300 bg-orange-100 flex items-center justify-center overflow-hidden`}>
         {/* Separators between slices */}
@@ -237,7 +237,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
           {/* Data management */}
           <div>
             <h3 className="font-medium text-gray-900 mb-3">Data management</h3>
-            <div className="space-y-2">
+            <div className="space-y-1 sm: space-y-3">
               <button
                 onClick={handleClearSavedUsers}
                 className="w-full flex items-center justify-center space-x-2 py-2 px-4 bg-yellow-50 text-yellow-700 border border-yellow-300 rounded-lg hover:bg-yellow-100"
@@ -269,7 +269,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
         </div>
 
         {/* Action buttons */}
-        <div className="p-4 border-t border-gray-200 sticky bottom-0 bg-white z-10 space-y-2">
+        <div className="p-4 border-t border-gray-200 sticky bottom-0 bg-white z-10 space-y-1 sm: space-y-3">
           <button
             onClick={handleSave}
             className="w-full bg-pizza-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-pizza-700 flex items-center justify-center space-x-2"

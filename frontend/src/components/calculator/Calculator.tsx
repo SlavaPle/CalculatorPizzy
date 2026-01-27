@@ -211,14 +211,14 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
       <div className="flex-1 overflow-y-auto pb-[22rem] min-h-[calc(100vh-14rem)]">
         <div className="space-y-6">
           {/* Participants list */}
-          <div className="space-y-3">
+          <div className="space-y-1 sm: space-y-3">
             <div className="flex items-center space-x-2 text-gray-700">
               <Users className="h-5 w-5" />
               <span className="font-medium">Participants ({users.length})</span>
             </div>
 
             {users.length > 0 && (
-              <div className="space-y-3">
+              <div className="space-y-1 sm: space-y-3">
                 <UserList
                   users={users}
                   onUpdateSlices={handleUpdateUserSlices}
@@ -263,11 +263,11 @@ const CalculatorComponent = ({ users, setUsers, onShowResults }: CalculatorProps
 
       {/* Fixed bottom panel with calculation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-        <div className="mx-auto px-4 py-3" style={{ maxWidth: '50rem' }}>
+        <div className="mx-auto px-4 py-1 sm:py-3" style={{ maxWidth: '50rem' }}>
           {/* Calculation */}
           {users.length > 0 && (
             <div className="mb-3">
-              <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 min-h-[12.5rem]">
+              <div className="bg-white rounded-lg shadow-sm p-1 sm:p-4 border border-gray-200 min-h-[12.5rem]">
                 <PizzaVariantsPanel
                   hasOptimal={calculation.hasOptimal}
                   hasLarge={calculation.hasLarge}

@@ -45,7 +45,7 @@ const PizzaCalculation = ({ calculation, users, onBack, onFinalCalculate }: Pizz
           <span>Calculation details</span>
         </h3>
 
-        <div className="space-y-3">
+        <div className="space-y-1 sm: space-y-3">
           <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
             <span className="text-gray-700">Participants:</span>
             <span className="font-medium">{calculation.totalUsers}</span>
@@ -100,7 +100,7 @@ const PizzaCalculation = ({ calculation, users, onBack, onFinalCalculate }: Pizz
           <span>Participants ({users.length})</span>
         </h3>
 
-        <div className="space-y-2">
+        <div className="space-y-1 sm: space-y-3">
           {users.map((user) => (
             <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div>
@@ -120,7 +120,7 @@ const PizzaCalculation = ({ calculation, users, onBack, onFinalCalculate }: Pizz
       </div>
 
       {/* Action buttons */}
-      <div className="space-y-3">
+      <div className="space-y-1 sm: space-y-3">
         <button
           onClick={onFinalCalculate}
           className="w-full bg-pizza-600 text-white py-3 px-6 rounded-lg font-medium flex items-center justify-center space-x-2"

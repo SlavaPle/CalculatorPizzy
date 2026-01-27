@@ -264,7 +264,7 @@ const SettingsPage = ({ currentUser, isGuest }: SettingsPageProps) => {
               Actions
             </h3>
 
-            <div className="space-y-3">
+            <div className="space-y-1 sm: space-y-3">
               <button
                 onClick={handleSaveSettings}
                 className="w-full btn-primary flex items-center justify-center space-x-2"
@@ -289,7 +289,7 @@ const SettingsPage = ({ currentUser, isGuest }: SettingsPageProps) => {
               Statistics
             </h3>
 
-            <div className="space-y-3 text-sm">
+            <div className="space-y-1 sm: space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Total calculations:</span>
                 <span className="font-medium">12</span>

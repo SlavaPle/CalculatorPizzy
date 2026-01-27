@@ -32,15 +32,15 @@ const PizzaVariantCard = ({
     return (
         <button
             onClick={onClick}
-            className={`border-2 rounded-lg p-3 transition-all w-full h-full ${isSelected
+            className={`border-2 rounded-lg p-1 sm:p-3 transition-all w-full h-full ${isSelected
                 ? 'border-pizza-500 bg-pizza-50'
                 : 'border-gray-200 hover:border-gray-300'
                 }`}
         >
-            {title && <div className="text-sm text-gray-600 mb-3 text-center font-medium">{title}</div>}
-            <div className={title ? "space-y-3" : "space-y-4"}>
+            {title && <div className="text-sm text-gray-600 text-center font-medium">{title}</div>}
+            <div className={title ? "space-y-1 sm: space-y-3" : "space-y-4"}>
                 {/* Pizza count */}
-                <div className="text-center">
+                <div className="text-center mt-0 sm:mt-3">
                     <div className="text-lg sm:text-2xl font-bold text-gray-900">
                         {pizzaCount}
                     </div>
@@ -48,7 +48,7 @@ const PizzaVariantCard = ({
                 </div>
 
                 {/* Slices calculation */}
-                <div className="text-center">
+                <div className="text-center mt-0 sm:mt-3">
                     <div className="text-lg sm:text-xl font-bold text-blue-600">
                         {requiredSlices}
                         {hasExtra && (
@@ -64,7 +64,7 @@ const PizzaVariantCard = ({
                 </div>
 
                 {/* Extra/Missing indicator */}
-                <div className="text-center">
+                <div className="text-center mt-0 sm:mt-3">
                     <div className={`text-lg font-bold ${hasExtra ? extraColor : 'text-gray-400'}`}>
                         {Math.abs(extraSlices)}
                     </div>
