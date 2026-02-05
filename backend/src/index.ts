@@ -35,8 +35,11 @@ const connectDB = async () => {
 // Middleware
 app.use(helmet()) // Безопасность
 app.use(morgan('combined')) // Логирование
+// CORS: jeden adres lub kilka przez przecinek (np. adres Vercel)
+const corsOrigin = process.env['CORS_ORIGIN'] || 'http://localhost:5173'
+const corsOrigins = corsOrigin.split(',').map((o) => o.trim()).filter(Boolean)
 app.use(cors({
-  origin: process.env['CORS_ORIGIN'] || 'http://localhost:5173',
+  origin: corsOrigins.length > 1 ? corsOrigins : corsOrigins[0] || 'http://localhost:5173',
   credentials: true
 }))
 

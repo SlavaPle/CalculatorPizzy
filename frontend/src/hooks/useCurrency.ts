@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatCurrency as formatCurrencyUtil } from '../utils/currency'
+import { apiBaseUrl } from '../utils/api'
 import axios from 'axios'
 
 const CURRENCY_STORAGE_KEY = 'userCurrency'
@@ -43,7 +44,7 @@ export function useCurrency(): UseCurrencyReturn {
 
         // Определяем валюту по локали через API
         try {
-          const response = await axios.get(`/api/locales/currency`, {
+          const response = await axios.get(`${apiBaseUrl}/api/locales/currency`, {
             params: { locale }
           })
           

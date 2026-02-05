@@ -3,6 +3,8 @@ import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import Backend from 'i18next-http-backend'
 
+const apiBase = import.meta.env.VITE_API_URL || ''
+
 i18n
   // Загрузка переводов с сервера
   .use(Backend)
@@ -14,7 +16,7 @@ i18n
   .init({
     // Backend конфигурация для загрузки переводов с сервера
     backend: {
-      loadPath: '/api/translations/{{lng}}?namespace={{ns}}',
+      loadPath: `${apiBase}/api/translations/{{lng}}?namespace={{ns}}`,
       crossDomain: false,
       requestOptions: {
         cache: 'no-cache' // Отключаем кеш для разработки

@@ -7,13 +7,14 @@ import HelpPage from './pages/HelpPage'
 import { Analytics } from "@vercel/analytics/react"
 
 import { CalculationResultStore } from './utils/CalculationResultStore'
+import { apiBaseUrl } from './utils/api'
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
 
   // Zapis wizyty (IP + data) w MongoDB przy wejściu na stronę
   useEffect(() => {
-    fetch('/api/visits', { method: 'POST' }).catch(() => {})
+    fetch(`${apiBaseUrl}/api/visits`, { method: 'POST' }).catch(() => {})
   }, [])
   const [isGuest, setIsGuest] = useState(false)
   const [users, setUsers] = useState<User[]>([])

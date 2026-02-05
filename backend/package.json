@@ -7,6 +7,7 @@
     "dev": "nodemon src/simple-server.js",
     "build": "tsc",
     "start": "node src/simple-server.js",
+    "start:full": "npm run build && node dist/index.js",
     "test": "jest"
   },
   "dependencies": {
