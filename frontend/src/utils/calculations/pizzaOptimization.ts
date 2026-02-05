@@ -97,47 +97,60 @@ export const createPizzaList = (
 interface SlicePriceSettings {
     calculationScheme: 'equal-price' | 'proportional-price'
     smallPizzaPricePercent: number // процент цены малой пиццы относительно большой (0-100)
+    largePizzaSlices: number
+    smallPizzaSlices: number
+}
+
+/** Element listy pizz (do liczenia dużych/małych) */
+export interface PizzaForCount {
+    size: 'small' | 'large'
+    slices?: number
 }
 
 /**
  * Рассчитывает стоимость одного большого куска
  * Поддерживает две схемы расчета:
  * - equal-price: все куски стоят одинаково (общая цена / количество кусков)
- * - proportional-price: получает количество малых и больших кусков для дальнейшего расчета
- * 
+ * - proportional-price: получает количество малых и больших пицц (z listy pizz) dla wyceny
+ *
  * @param totalPrice - общая цена
  * @param slices - список кусков с их размерами
  * @param settings - настройки расчета (схема и процент цены малой пиццы)
+ * @param pizzas - opcjonalna lista pizz; przy proportional-price służy do liczby dużych i małych pizz
  * @returns стоимость одного большого куска
  */
 export const calculateSlicePrice = (
     totalPrice: number,
     slices: Array<{ size: 'small' | 'large' }>,
-    settings: SlicePriceSettings
-): number => {
+    settings: SlicePriceSettings,
+    pizzas?: PizzaForCount[]
+): [number, number] => {
     const totalSlices = slices.length
-    
+
     if (totalSlices === 0) {
-        return 0
+        return [0, 0]
     }
 
     // 1. Если одна цена - делим цену на количество кусков
     if (settings.calculationScheme === 'equal-price') {
-        return totalPrice / totalSlices
+        return [totalPrice / totalSlices, 0]
     }
 
-    // 2. Если цена пропорциональная - получаем количество малых и больших кусков
+    // 2. Jeśli cena proporcjonalna — liczba dużych i małych pizz z listy pizz lub z kawałków
     if (settings.calculationScheme === 'proportional-price') {
-        // Получаем количество малых и больших кусков
-        const largeSlicesCount = slices.filter(slice => slice.size === 'large').length
-        const smallSlicesCount = slices.filter(slice => slice.size === 'small').length
-        
-        // smallPizzaPricePercent берется из настроек
-        return totalPrice / (largeSlicesCount + smallSlicesCount * settings.smallPizzaPricePercent / 100)
+        let largePizzas: number
+        let smallPizzas: number
+
+        largePizzas = pizzas?.filter(p => p.size === 'large').length ?? 0 as number
+        smallPizzas = pizzas?.filter(p => p.size === 'small').length ?? 0 as number
+        const avgPizzaPrice = totalPrice / (largePizzas + smallPizzas * settings.smallPizzaPricePercent / 100);
+        const largeSlicePrice = avgPizzaPrice / settings.largePizzaSlices;
+        const smallSlicePrice = avgPizzaPrice * settings.smallPizzaPricePercent / (100 * settings.smallPizzaSlices);
+
+        return [largeSlicePrice, smallSlicePrice];
     }
 
-    // Fallback
-    return totalPrice / totalSlices
+    return [totalPrice / totalSlices, 0]
 }
 
 /**

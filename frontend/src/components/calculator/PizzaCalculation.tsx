@@ -119,7 +119,7 @@ const PizzaCalculation = ({ calculation, users, onBack, onFinalCalculate }: Pizz
         </div>
       </div>
 
-      {/* Action buttons */}
+      {/* Action buttons */} 
       <div className="space-y-1 sm: space-y-3">
         <button
           onClick={onFinalCalculate}

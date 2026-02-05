@@ -39,7 +39,9 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
   const slicePriceSettings = useMemo(() => {
     return {
       calculationScheme: (pizzaSettings.calculationScheme === 'proportional-price' ? 'proportional-price' : 'equal-price') as 'equal-price' | 'proportional-price',
-      smallPizzaPricePercent: pizzaSettings.smallPizzaPricePercent
+      smallPizzaPricePercent: pizzaSettings.smallPizzaPricePercent,
+      largePizzaSlices: pizzaSettings.largePizzaSlices,
+      smallPizzaSlices: pizzaSettings.smallPizzaSlices,
     }
   }, [pizzaSettings.calculationScheme, pizzaSettings.smallPizzaPricePercent])
 
@@ -65,11 +67,17 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
     }).format(amount)
   }
 
+  // Lista pizz (do przekazania do calculateSlicePrice — liczba dużych/małych)
+  const pizzaList = useMemo(
+    () => result.calculationData?.pizzaList || result.optimalPizzas || [],
+    [result.calculationData?.pizzaList, result.optimalPizzas]
+  )
+
   // Calculate total slices with metadata (PizzaSlice[]) — z pizzaList gdy dostępne (zgodne id z distribution)
   const totalSlices = useMemo(() => {
     const allSlices: any[] = []
     const source = result.calculationData?.pizzaList || result.optimalPizzas
-    source.forEach((pizza: any) => {
+    source?.forEach((pizza: any) => {
       const pizzaType = pizza.type || 'Margherita'
       const pricePerSlice = calculateSimpleSlicePrice(pizza.price, pizza.slices, pizza.isFree || false)
       for (let i = 0; i < pizza.slices; i++) {
@@ -166,10 +174,11 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
     if (slicePriceSettings.calculationScheme !== 'proportional-price') return null
     const amount = parseFloat(orderAmount) || 0
     if (amount <= 0) return { large: 0, small: 0 }
-    const large = calculateSlicePrice(amount, totalSlices, slicePriceSettings)
-    const small = large * pizzaSettings.smallPizzaPricePercent / 100
+    const [large, small] = calculateSlicePrice(amount, totalSlices, slicePriceSettings, pizzaList)
+    // const large = calculateSlicePrice(amount, totalSlices, slicePriceSettings, pizzaList)[0]
+    // const small = calculateSlicePrice(amount, totalSlices, slicePriceSettings, pizzaList)[1]
     return { large, small }
-  }, [orderAmount, totalSlices, pizzaSettings.smallPizzaPricePercent, slicePriceSettings])
+  }, [orderAmount, totalSlices, slicePriceSettings, pizzaList, pizzaSettings.smallPizzaPricePercent])
 
   // Koszt extra slices — proportional: calcSlicesCostBySize; equal: wszystkie×pricePerSlice
   const commonSlicesCost = useMemo(() => {
@@ -317,10 +326,10 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
             {slicePriceSettings.calculationScheme === 'proportional-price' ? (
               <div className="space-y-1">
                 <div className="text-lg font-bold text-blue-600">
-                  Large: {formatCurrency(calculateSlicePrice(parseFloat(orderAmount) || 0, totalSlices, slicePriceSettings))}
+                  Large: {formatCurrency(calculateSlicePrice(parseFloat(orderAmount) || 0, totalSlices, slicePriceSettings, pizzaList)[0])}
                 </div>
                 <div className="text-lg font-bold text-green-600">
-                  Small: {formatCurrency(calculateSlicePrice(parseFloat(orderAmount) || 0, totalSlices, slicePriceSettings) * pizzaSettings.smallPizzaPricePercent / 100)}
+                  Small: {formatCurrency(calculateSlicePrice(parseFloat(orderAmount) || 0, totalSlices, slicePriceSettings, pizzaList)[1])}
                 </div>
               </div>
             ) : (
