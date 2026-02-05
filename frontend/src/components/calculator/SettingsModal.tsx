@@ -260,7 +260,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
           <div className="bg-gray-50 rounded-lg p-3">
             <h4 className="text-sm font-medium text-gray-900 mb-2">About the app</h4>
             <p className="text-xs text-gray-600">
-              PizzaCalk v1.0.0
+              PizzaCalk v1.0.1
             </p>
             <p className="text-xs text-gray-600 mt-1">
               Pizza purchase calculator for office workers
