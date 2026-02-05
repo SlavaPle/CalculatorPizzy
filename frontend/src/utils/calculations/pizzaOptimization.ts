@@ -144,8 +144,8 @@ export const calculateSlicePrice = (
         largePizzas = pizzas?.filter(p => p.size === 'large').length ?? 0 as number
         smallPizzas = pizzas?.filter(p => p.size === 'small').length ?? 0 as number
         const avgPizzaPrice = totalPrice / (largePizzas + smallPizzas * settings.smallPizzaPricePercent / 100);
-        const largeSlicePrice = avgPizzaPrice / settings.largePizzaSlices;
-        const smallSlicePrice = avgPizzaPrice * settings.smallPizzaPricePercent / (100 * settings.smallPizzaSlices);
+        const largeSlicePrice = largePizzas > 0 ? avgPizzaPrice / settings.largePizzaSlices : 0;
+        const smallSlicePrice = smallPizzas > 0 ? avgPizzaPrice * settings.smallPizzaPricePercent / (100 * settings.smallPizzaSlices) : 0;
 
         return [largeSlicePrice, smallSlicePrice];
     }
