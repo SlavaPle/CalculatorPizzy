@@ -480,6 +480,8 @@ const Results = ({ result, users, onBack, onNew }: ResultsProps) => {
             store.setData({ ...data, pizzaSettings: newSettings })
           }
           setShowSettings(false)
+          // Po zapisie przechodzimy na stronę kalkulacji
+          onBack()
         }}
       />
     </div>

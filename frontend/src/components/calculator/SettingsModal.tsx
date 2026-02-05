@@ -178,15 +178,15 @@ const SettingsModal = ({ isOpen, onClose, settings, onSave }: SettingsModalProps
                 label="Slices in small pizza"
                 value={localSettings.smallPizzaSlices}
                 onChange={(value) => setLocalSettings({ ...localSettings, smallPizzaSlices: value })}
-                min={4}
-                max={Math.min(10, localSettings.largePizzaSlices - 1)}
+                min={2}
+                max={12}
               />
 
               <NumericStepper
                 label="Slices in large pizza"
                 value={localSettings.largePizzaSlices}
                 onChange={(value) => setLocalSettings({ ...localSettings, largePizzaSlices: value })}
-                min={Math.max(6, localSettings.smallPizzaSlices + 1)}
+                min={2}
                 max={12}
               />
 
