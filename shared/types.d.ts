@@ -27,6 +27,7 @@ export interface User {
     name: string;
     minSlices: number;
     maxSlices: number;
+    canBeMore: boolean;
     preferredTypes?: string[];
     personalSauces: Sauce[];
     totalCost: number;

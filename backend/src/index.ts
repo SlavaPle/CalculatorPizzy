@@ -10,6 +10,7 @@ import authRoutes from './routes/auth'
 import userRoutes from './routes/users'
 import orderRoutes from './routes/orders'
 import settingsRoutes from './routes/settings'
+import visitRoutes from './routes/visits'
 import { errorHandler } from './middleware/errorHandler'
 import { notFound } from './middleware/notFound'
 
@@ -17,12 +18,12 @@ import { notFound } from './middleware/notFound'
 dotenv.config()
 
 const app = express()
-const PORT = process.env.PORT || 3001
+const PORT = process.env['PORT'] || 3001
 
 // Подключение к MongoDB
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/pizzacalk'
+    const mongoURI = process.env['MONGODB_URI'] || 'mongodb://localhost:27017/pizzacalk'
     await mongoose.connect(mongoURI)
     console.log('✅ MongoDB подключена успешно')
   } catch (error) {
@@ -35,14 +36,14 @@ const connectDB = async () => {
 app.use(helmet()) // Безопасность
 app.use(morgan('combined')) // Логирование
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: process.env['CORS_ORIGIN'] || 'http://localhost:5173',
   credentials: true
 }))
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 минут
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'), // лимит запросов
+  windowMs: parseInt(process.env['RATE_LIMIT_WINDOW_MS'] || '900000', 10), // 15 минут
+  max: parseInt(process.env['RATE_LIMIT_MAX_REQUESTS'] || '100', 10), // лимит запросов
   message: {
     error: 'Слишком много запросов, попробуйте позже'
   }
@@ -57,14 +58,15 @@ app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/orders', orderRoutes)
 app.use('/api/settings', settingsRoutes)
+app.use('/api/visits', visitRoutes)
 
 // Health check
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_req, res) => {
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env['NODE_ENV'] || 'development'
   })
 })
 
@@ -80,7 +82,7 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`🚀 Сервер запущен на порту ${PORT}`)
       console.log(`📊 Health check: http://localhost:${PORT}/api/health`)
-      console.log(`🌍 Окружение: ${process.env.NODE_ENV || 'development'}`)
+      console.log(`🌍 Окружение: ${process.env['NODE_ENV'] || 'development'}`)
     })
   } catch (error) {
     console.error('❌ Ошибка запуска сервера:', error)

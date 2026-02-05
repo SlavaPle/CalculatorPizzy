@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose'
+import mongoose, { Document, Model, Schema } from 'mongoose'
 
 export interface IUser extends Document {
   name: string
@@ -104,21 +104,27 @@ const UserSchema = new Schema<IUser>({
 UserSchema.index({ email: 1 })
 UserSchema.index({ createdAt: -1 })
 
-// Виртуальные поля
-UserSchema.virtual('id').get(function() {
-  return this._id.toHexString()
+// Pola wirtualne
+UserSchema.virtual('id').get(function(this: IUser) {
+  return (this as unknown as { _id: { toHexString: () => string } })._id.toHexString()
 })
 
-// Методы экземпляра
-UserSchema.methods.toJSON = function() {
-  const user = this.toObject()
-  delete user.password
-  delete user.__v
+// Interfejs modelu ze statykami
+export interface IUserModel extends Model<IUser> {
+  findByEmail(email: string): Promise<IUser | null>
+}
+
+// Metody instancji
+UserSchema.methods['toJSON'] = function(this: IUser) {
+  const user = (this as Document & IUser)['toObject']()
+  const u = user as Record<string, unknown>
+  delete u['password']
+  delete u['__v']
   return user
 }
 
-// Статические методы
-UserSchema.statics.findByEmail = function(email: string) {
+// Metody statyczne
+UserSchema.statics['findByEmail'] = function(email: string) {
   return this.findOne({ email: email.toLowerCase() })
 }
 
@@ -131,4 +137,4 @@ declare global {
   }
 }
 
-export default mongoose.model<IUser>('User', UserSchema)
+export default mongoose.model<IUser, IUserModel>('User', UserSchema)

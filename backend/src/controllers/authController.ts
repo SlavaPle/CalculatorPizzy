@@ -37,13 +37,13 @@ export const register = asyncHandler(async (req: Request, res: Response, next: N
   })
 
   // Генерация токена
-  const token = generateToken(user._id)
+  const token = generateToken(String(user._id))
 
   res.status(201).json({
     success: true,
     message: 'Пользователь успешно зарегистрирован',
     data: {
-      user: user.toJSON(),
+      user: user['toJSON'](),
       token
     }
   })
@@ -73,13 +73,13 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
   }
 
   // Генерация токена
-  const token = generateToken(user._id)
+  const token = generateToken(String(user._id))
 
   res.json({
     success: true,
     message: 'Успешный вход',
     data: {
-      user: user.toJSON(),
+      user: user['toJSON'](),
       token
     }
   })
@@ -88,7 +88,7 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
 // @desc    Получение профиля пользователя
 // @route   GET /api/auth/me
 // @access  Private
-export const getMe = asyncHandler(async (req: any, res: Response, next: NextFunction) => {
+export const getMe = asyncHandler(async (req: any, res: Response, _next: NextFunction) => {
   const user = await User.findById(req.user._id).select('-password')
   
   res.json({
@@ -100,7 +100,7 @@ export const getMe = asyncHandler(async (req: any, res: Response, next: NextFunc
 // @desc    Обновление профиля пользователя
 // @route   PUT /api/auth/me
 // @access  Private
-export const updateMe = asyncHandler(async (req: any, res: Response, next: NextFunction) => {
+export const updateMe = asyncHandler(async (req: any, res: Response, _next: NextFunction) => {
   const { name, preferences, settings } = req.body
   const userId = req.user._id
 

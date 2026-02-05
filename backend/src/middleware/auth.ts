@@ -7,7 +7,7 @@ export interface AuthRequest extends Request {
   user?: any
 }
 
-export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const protect = async (req: AuthRequest, _res: Response, next: NextFunction) => {
   try {
     let token: string | undefined
 
@@ -22,8 +22,10 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
     }
 
     try {
+      const secret = process.env['JWT_SECRET']
+      if (!secret) throw new Error('JWT_SECRET not configured')
       // Верифицируем токен
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
+      const decoded = jwt.verify(token, secret) as { id: string }
       
       // Находим пользователя
       const user = await User.findById(decoded.id).select('-password')
@@ -41,7 +43,7 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
   }
 }
 
-export const optionalAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const optionalAuth = async (req: AuthRequest, _res: Response, next: NextFunction) => {
   try {
     let token: string | undefined
 
@@ -51,13 +53,16 @@ export const optionalAuth = async (req: AuthRequest, res: Response, next: NextFu
 
     if (token) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
-        const user = await User.findById(decoded.id).select('-password')
-        if (user) {
-          req.user = user
+        const secret = process.env['JWT_SECRET']
+        if (secret) {
+          const decoded = jwt.verify(token, secret) as { id: string }
+          const user = await User.findById(decoded.id).select('-password')
+          if (user) {
+            req.user = user
+          }
         }
-      } catch (error) {
-        // Игнорируем ошибки токена для опциональной аутентификации
+      } catch {
+        // Ignorujemy błędy tokena przy opcjonalnej autentykacji
       }
     }
 
@@ -68,9 +73,10 @@ export const optionalAuth = async (req: AuthRequest, res: Response, next: NextFu
 }
 
 export const generateToken = (id: string): string => {
-  return jwt.sign({ id }, process.env.JWT_SECRET!, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d'
-  })
+  const secret = process.env['JWT_SECRET']
+  if (!secret) throw new Error('JWT_SECRET not configured')
+  const expiresIn = (process.env['JWT_EXPIRES_IN'] || '7d') as string
+  return jwt.sign({ id }, secret as jwt.Secret, { expiresIn } as jwt.SignOptions)
 }
 
 

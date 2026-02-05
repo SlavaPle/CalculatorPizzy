@@ -9,7 +9,7 @@ export const errorHandler = (
   err: AppError,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
   let error = { ...err }
   error.message = err.message
@@ -62,7 +62,7 @@ export const errorHandler = (
   res.status(error.statusCode || 500).json({
     success: false,
     error: error.message || 'Внутренняя ошибка сервера',
-    ...(process.env.NODE_ENV === 'development' && {
+    ...(process.env['NODE_ENV'] === 'development' && {
       stack: err.stack,
       details: err
     })

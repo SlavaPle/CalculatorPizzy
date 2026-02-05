@@ -96,6 +96,11 @@ app.get('/api/orders/history', (req, res) => {
   })
 })
 
+// Zapis wizyty (w pełnym backendzie z MongoDB zapisuje IP + datę)
+app.post('/api/visits', (req, res) => {
+  res.status(201).json({ success: true, message: 'Wizyta zapisana' })
+})
+
 app.get('/api/settings', (req, res) => {
   res.json({
     success: true,

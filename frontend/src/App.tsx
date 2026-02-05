@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { User } from './shared/types'
 import Header from './components/common/Header'
 import CalculatorComponent from './components/calculator/Calculator'
@@ -10,6 +10,11 @@ import { CalculationResultStore } from './utils/CalculationResultStore'
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
+
+  // Zapis wizyty (IP + data) w MongoDB przy wejściu na stronę
+  useEffect(() => {
+    fetch('/api/visits', { method: 'POST' }).catch(() => {})
+  }, [])
   const [isGuest, setIsGuest] = useState(false)
   const [users, setUsers] = useState<User[]>([])
   const [result, setResult] = useState<any>(null)

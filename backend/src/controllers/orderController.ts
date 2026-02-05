@@ -1,8 +1,10 @@
-import { Request, Response, NextFunction } from 'express'
+import { Response, NextFunction } from 'express'
 import Order from '../models/Order'
 import User from '../models/User'
 import { createError, asyncHandler } from '../middleware/errorHandler'
-import { PizzaCalculator } from '../../../shared/classes'
+
+// Ładowanie w runtime – shared nie jest w rootDir backendu
+const { PizzaCalculator } = require('../../../shared/classes') as { PizzaCalculator: new (order: unknown) => { calculateOptimalOrder: () => { optimalPizzas: unknown[]; totalCost: number; freePizzaValue?: number } } }
 
 // @desc    Расчет оптимального заказа
 // @route   POST /api/orders/calculate
@@ -31,15 +33,24 @@ export const calculateOrder = asyncHandler(async (req: any, res: Response, next:
   }
 
   // Создание заказа
-  const orderData = {
-    userId: req.user?._id || null,
-    users: users.map((user: any) => ({
+  const orderData: {
+    userId: unknown;
+    users: unknown[];
+    pizzas: unknown[];
+    sharedSauces: unknown[];
+    totalCost: number;
+    freePizzaCount: number;
+    calculationResult: Record<string, unknown>;
+    settings: { freePizzaThreshold: number; freePizzaSize: string; currency: string };
+  } = {
+    userId: req.user?._id ?? null,
+    users: users.map((user: Record<string, unknown>) => ({
       userId: `user-${Date.now()}-${Math.random()}`,
-      name: user.name,
-      minSlices: user.minSlices,
-      maxSlices: user.maxSlices,
-      preferredTypes: user.preferredTypes || [],
-      personalSauces: user.personalSauces || [],
+      name: user['name'],
+      minSlices: user['minSlices'],
+      maxSlices: user['maxSlices'],
+      preferredTypes: (user['preferredTypes'] as unknown[]) || [],
+      personalSauces: (user['personalSauces'] as unknown[]) || [],
       totalCost: 0,
       assignedSlices: []
     })),
@@ -62,7 +73,7 @@ export const calculateOrder = asyncHandler(async (req: any, res: Response, next:
   // Обновление данных заказа
   orderData.pizzas = result.optimalPizzas
   orderData.totalCost = result.totalCost
-  orderData.freePizzaCount = result.optimalPizzas.filter(p => p.isFree).length
+  orderData.freePizzaCount = result.optimalPizzas.filter((p: unknown) => (p as { isFree?: boolean }).isFree).length
   orderData.calculationResult = result
 
   // Сохранение заказа (если пользователь авторизован)
@@ -98,7 +109,7 @@ export const calculateOrder = asyncHandler(async (req: any, res: Response, next:
 // @desc    Получение истории заказов
 // @route   GET /api/orders/history
 // @access  Private
-export const getOrderHistory = asyncHandler(async (req: any, res: Response, next: NextFunction) => {
+export const getOrderHistory = asyncHandler(async (req: any, res: Response, _next: NextFunction) => {
   const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = req.query
   const userId = req.user._id
 

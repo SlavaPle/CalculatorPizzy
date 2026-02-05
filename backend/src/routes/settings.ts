@@ -1,7 +1,7 @@
 import express from 'express'
 import { protect } from '../middleware/auth'
 import User from '../models/User'
-import { asyncHandler, createError } from '../middleware/errorHandler'
+import { asyncHandler } from '../middleware/errorHandler'
 
 const router = express.Router()
 
@@ -10,7 +10,9 @@ const router = express.Router()
 // @access  Private
 router.get('/', protect, asyncHandler(async (req: any, res: any) => {
   const user = await User.findById(req.user._id).select('settings preferences')
-  
+  if (!user) {
+    return res.status(404).json({ success: false, error: 'Użytkownik nie znaleziony' })
+  }
   res.json({
     success: true,
     data: {
@@ -43,6 +45,9 @@ router.put('/', protect, asyncHandler(async (req: any, res: any) => {
     { new: true, runValidators: true }
   ).select('settings preferences')
 
+  if (!user) {
+    return res.status(404).json({ success: false, error: 'Użytkownik nie znaleziony' })
+  }
   res.json({
     success: true,
     message: 'Настройки обновлены',
@@ -81,6 +86,9 @@ router.post('/reset', protect, asyncHandler(async (req: any, res: any) => {
     { new: true, runValidators: true }
   ).select('settings preferences')
 
+  if (!user) {
+    return res.status(404).json({ success: false, error: 'Użytkownik nie znaleziony' })
+  }
   res.json({
     success: true,
     message: 'Настройки сброшены к значениям по умолчанию',

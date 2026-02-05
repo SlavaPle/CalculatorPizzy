@@ -208,20 +208,21 @@ OrderSchema.index({ userId: 1, createdAt: -1 })
 OrderSchema.index({ totalCost: 1 })
 OrderSchema.index({ createdAt: -1 })
 
-// Виртуальные поля
-OrderSchema.virtual('id').get(function() {
-  return this._id.toHexString()
+// Pola wirtualne
+OrderSchema.virtual('id').get(function(this: IOrder) {
+  return (this as unknown as { _id: { toHexString: () => string } })._id.toHexString()
 })
 
-// Методы экземпляра
-OrderSchema.methods.calculateSavings = function() {
-  const regularCost = this.pizzas.reduce((sum, pizza) => {
+// Metody instancji
+OrderSchema.methods['calculateSavings'] = function(this: IOrder) {
+  const pizzas = this.pizzas
+  const regularCost = pizzas.reduce((sum: number, pizza: IPizza) => {
     return sum + (pizza.isFree ? 0 : pizza.price)
   }, 0)
   
-  const freePizzaValue = this.pizzas
-    .filter(pizza => pizza.isFree)
-    .reduce((sum, pizza) => sum + pizza.price, 0)
+  const freePizzaValue = pizzas
+    .filter((pizza: IPizza) => pizza.isFree)
+    .reduce((sum: number, pizza: IPizza) => sum + pizza.price, 0)
     
   return {
     regularCost,
